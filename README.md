@@ -1,2 +1,2 @@
-# Agentic-Chatbot-System-for-Document-Querying-Analysis-and-Summarization
+# Agentic Chatbot System for Document Querying Analysis and Summarization
 My capstone project.
