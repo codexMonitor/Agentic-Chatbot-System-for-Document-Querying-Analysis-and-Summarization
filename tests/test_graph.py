@@ -3,6 +3,7 @@ import pytest
 from doc_agent.config import Settings
 from doc_agent.graph import build_graph
 from doc_agent.services import Services
+from doc_agent.services.base import Chunk
 from doc_agent.services.ingestion import split_text
 from doc_agent.services.llm import FakeLLM
 from doc_agent.services.vectorstore import InMemoryVectorStore
@@ -39,7 +40,7 @@ def test_router_intent(graph, question, intent):
 
 def test_qa_returns_only_relevant_chunk(graph):
     result = ask(graph, "What is Scrum?")
-    assert result["context"] == [CHUNKS[1]]
+    assert result["context"] == [Chunk(CHUNKS[1], "notes.txt", 1)]
 
 
 def test_qa_without_match_says_nothing_found(graph):
@@ -49,7 +50,22 @@ def test_qa_without_match_says_nothing_found(graph):
 
 def test_summarize_uses_all_chunks(graph):
     result = ask(graph, "Summarize the document")
-    assert result["context"] == CHUNKS
+    assert [chunk.text for chunk in result["context"]] == CHUNKS
+
+
+def test_search_results_carry_source_and_position():
+    store = InMemoryVectorStore()
+    store.add("a.txt", ["alpha one", "beta two"])
+    store.add("b.txt", ["gamma three", "beta four"])
+    assert store.search("beta") == [Chunk("beta two", "a.txt", 1), Chunk("beta four", "b.txt", 1)]
+    assert store.all_chunks()[2] == Chunk("gamma three", "b.txt", 0)
+
+
+def test_adding_a_source_again_replaces_its_chunks():
+    store = InMemoryVectorStore()
+    store.add("a.txt", ["old one", "old two"])
+    store.add("a.txt", ["new one"])
+    assert store.all_chunks() == [Chunk("new one", "a.txt", 0)]
 
 
 def test_summarize_empty_store():

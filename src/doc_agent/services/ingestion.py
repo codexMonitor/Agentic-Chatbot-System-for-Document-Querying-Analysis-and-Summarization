@@ -32,5 +32,5 @@ def split_text(text: str, chunk_size: int = 500, overlap: int = 50) -> list[str]
 
 def ingest_file(path: Path, store: VectorStore, chunk_size: int, overlap: int) -> int:
     chunks = split_text(load_text(path), chunk_size, overlap)
-    store.add(path.name, chunks)
+    store.add(path.name, chunks)  # the store assigns positions
     return len(chunks)
