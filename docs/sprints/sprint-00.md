@@ -22,8 +22,8 @@ supervisor role and sprint length, create the project board, answer the open dec
 
 ## Review
 
-To be filled in after the sprint review with the supervisor.
+For me, the sooner, the better. So the length is not important.
 
 ## Retrospective
 
-To be filled in by the human.
+I think it's good enough.
