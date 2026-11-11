@@ -90,6 +90,14 @@ def test_sources_do_not_leak_into_later_turns(graph):
     assert ask(graph, "Summarize the document", thread="leak")["sources"] == []
 
 
+def test_checkpoint_roundtrip_does_not_warn_about_chunk(graph, recwarn, caplog):
+    ask(graph, "What is Scrum?", thread="serde")
+    state = graph.get_state({"configurable": {"thread_id": "serde"}})
+    assert state.values["context"] == [Chunk(CHUNKS[1], "notes.txt", 1)]
+    assert "unregistered type" not in caplog.text
+    assert not [w for w in recwarn if "unregistered" in str(w.message)]
+
+
 def test_qa_without_match_says_nothing_found(graph):
     result = ask(graph, "xylophone")
     assert "couldn't find" in result["answer"]

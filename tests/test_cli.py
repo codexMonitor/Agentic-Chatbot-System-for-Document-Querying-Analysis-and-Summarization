@@ -1,3 +1,6 @@
+import io
+import sys
+
 import pytest
 
 from doc_agent import cli
@@ -60,6 +63,18 @@ def test_startup_error_is_reported(monkeypatch, capsys):
     code, out = run_cli(monkeypatch, capsys, [], [])
     assert code == 1
     assert "GEMINI_API_KEY" in out
+
+
+def test_vietnamese_output_survives_a_legacy_code_page(monkeypatch, tmp_path):
+    raw = io.BytesIO()
+    monkeypatch.setattr(sys, "stdout", io.TextIOWrapper(raw, encoding="cp1252"))
+    path = tmp_path / "vi.txt"
+    path.write_text("Scrum chia công việc thành các sprint.\n", encoding="utf-8")
+    answers = iter(["Scrum chia công việc", "quit"])
+    monkeypatch.setattr("builtins.input", lambda prompt="": next(answers))
+    assert cli.main([str(path)]) == 0
+    sys.stdout.flush()
+    assert "công việc" in raw.getvalue().decode("utf-8")
 
 
 def test_chroma_persists_between_runs(monkeypatch, capsys, tmp_path):
