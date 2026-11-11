@@ -4,6 +4,7 @@ from pathlib import Path
 from doc_agent.config import load_settings
 from doc_agent.graph import build_graph
 from doc_agent.services import build_services
+from doc_agent.services.errors import IndexMismatchError, LLMError
 from doc_agent.services.ingestion import ingest_file
 
 
@@ -13,7 +14,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     settings = load_settings()
-    services = build_services(settings)
+    try:
+        services = build_services(settings)
+    except (LLMError, IndexMismatchError) as error:
+        print(f"! {error}")
+        return 1
     for path in args.files:
         try:
             count = ingest_file(path, services.store, settings.chunk_size, settings.chunk_overlap)
@@ -35,4 +40,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
         result = graph.invoke({"messages": [("user", question)]}, config)
         print(f"[{result['intent']}] {result['answer']}")
+        sources = result.get("sources") or []
+        if sources:
+            print("Sources:")
+            for item in sources:
+                print(f"[{item['n']}] {item['source']}#{item['position']}")
     return 0
