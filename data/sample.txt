@@ -1,0 +1,7 @@
+LangGraph is a library for building stateful, multi-step applications with language models. A LangGraph application is a graph: nodes are Python functions that read and update a shared state, and edges decide which node runs next. Conditional edges choose the next node at runtime, for example by routing a question to a question-answering node or a summarization node.
+
+Scrum is an agile framework for delivering work in short iterations called sprints. Each sprint has a sprint goal and is planned from the product backlog. At the end of a sprint the team holds a sprint review to show the increment and a retrospective to improve the process.
+
+Retrieval-augmented generation, or RAG, answers questions using external documents. Documents are split into chunks, each chunk is stored in a vector database, and at question time the most relevant chunks are retrieved and given to the language model. The model answers only from the retrieved context and cites its sources.
+
+Map-reduce summarization handles documents that are too long for one prompt. In the map step each chunk is summarized on its own. In the reduce step the partial summaries are combined into one final summary of the whole document.

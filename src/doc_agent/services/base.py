@@ -1,0 +1,13 @@
+from typing import Protocol
+
+
+class LLMService(Protocol):
+    def invoke(self, prompt: str) -> str: ...
+
+
+class VectorStore(Protocol):
+    def add(self, doc_id: str, chunks: list[str]) -> None: ...
+
+    def search(self, query: str, k: int = 4) -> list[str]: ...
+
+    def all_chunks(self) -> list[str]: ...
