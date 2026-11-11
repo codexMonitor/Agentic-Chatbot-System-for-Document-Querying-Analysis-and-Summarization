@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 from doc_agent.config import Settings
 from doc_agent.services.base import LLMService, VectorStore
-from doc_agent.services.llm import FakeLLM
+from doc_agent.services.llm import LLM_PROVIDERS
 from doc_agent.services.vectorstore import InMemoryVectorStore
 
 
@@ -13,11 +13,13 @@ class Services:
 
 
 def _make_llm(settings: Settings) -> LLMService:
-    if settings.llm_provider == "fake":
-        return FakeLLM()
-    raise NotImplementedError(
-        f"Unknown LLM provider '{settings.llm_provider}': add an adapter and register it here."
-    )
+    factory = LLM_PROVIDERS.get(settings.llm_provider)
+    if factory is None:
+        known = ", ".join(sorted(LLM_PROVIDERS))
+        raise NotImplementedError(
+            f"Unknown LLM provider '{settings.llm_provider}'. Known providers: {known}."
+        )
+    return factory(settings)
 
 
 def _make_store(settings: Settings) -> VectorStore:
