@@ -43,6 +43,53 @@ def test_qa_returns_only_relevant_chunk(graph):
     assert result["context"] == [Chunk(CHUNKS[1], "notes.txt", 1)]
 
 
+def test_qa_sources_match_retrieved_chunks(graph):
+    result = ask(graph, "What is Scrum?")
+    assert result["sources"] == [{"n": 1, "source": "notes.txt", "position": 1}]
+    assert [(s["source"], s["position"]) for s in result["sources"]] == [
+        (chunk.source, chunk.position) for chunk in result["context"]
+    ]
+
+
+def test_qa_sources_are_numbered_in_context_order():
+    store = InMemoryVectorStore()
+    store.add("a.txt", ["scrum sprint planning", "unrelated text"])
+    store.add("b.txt", ["scrum retrospective", "scrum sprint review sprint"])
+    graph = build_graph(Services(llm=FakeLLM(), store=store), Settings())
+    result = ask(graph, "scrum sprint")
+    assert [s["n"] for s in result["sources"]] == [1, 2, 3]
+    assert [(s["source"], s["position"]) for s in result["sources"]] == [
+        (chunk.source, chunk.position) for chunk in result["context"]
+    ]
+
+
+def test_qa_prompt_labels_chunks_with_source_and_position():
+    prompts = []
+
+    class RecordingLLM(FakeLLM):
+        def invoke(self, prompt):
+            prompts.append(prompt)
+            return super().invoke(prompt)
+
+    store = InMemoryVectorStore()
+    store.add("notes.txt", CHUNKS)
+    graph = build_graph(Services(llm=RecordingLLM(), store=store), Settings())
+    ask(graph, "What is Scrum?")
+    qa_prompt = next(prompt for prompt in prompts if prompt.startswith("### TASK: qa"))
+    assert "[1] (notes.txt#1) Scrum organizes work" in qa_prompt
+
+
+def test_qa_without_match_has_no_sources(graph):
+    result = ask(graph, "xylophone")
+    assert "couldn't find" in result["answer"]
+    assert result["sources"] == []
+
+
+def test_sources_do_not_leak_into_later_turns(graph):
+    ask(graph, "What is Scrum?", thread="leak")
+    assert ask(graph, "Summarize the document", thread="leak")["sources"] == []
+
+
 def test_qa_without_match_says_nothing_found(graph):
     result = ask(graph, "xylophone")
     assert "couldn't find" in result["answer"]

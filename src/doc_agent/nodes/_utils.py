@@ -21,3 +21,11 @@ def format_context(chunks: list[Chunk]) -> str:
         f"[{i}] ({chunk.source}#{chunk.position}) {chunk.text}"
         for i, chunk in enumerate(chunks, start=1)
     )
+
+
+def source_refs(chunks: list[Chunk]) -> list[dict]:
+    """Numbering matches `format_context`, so `[n]` in an answer maps to `sources[n - 1]`."""
+    return [
+        {"n": i, "source": chunk.source, "position": chunk.position}
+        for i, chunk in enumerate(chunks, start=1)
+    ]
