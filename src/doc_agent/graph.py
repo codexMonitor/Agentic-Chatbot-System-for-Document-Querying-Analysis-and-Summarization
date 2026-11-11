@@ -1,0 +1,34 @@
+from langgraph.checkpoint.memory import MemorySaver
+from langgraph.graph import END, START, StateGraph
+
+from doc_agent.config import Settings
+from doc_agent.nodes.analysis import make_analysis
+from doc_agent.nodes.qa import make_qa
+from doc_agent.nodes.router import make_router
+from doc_agent.nodes.summarize import make_summarize
+from doc_agent.services.container import Services
+from doc_agent.state import AgentState
+
+
+def route_by_intent(state: AgentState) -> str:
+    return state["intent"]
+
+
+def build_graph(services: Services, settings: Settings | None = None):
+    settings = settings or Settings()
+    graph = StateGraph(AgentState)
+    graph.add_node("router", make_router(services.llm))
+    graph.add_node("qa", make_qa(services.llm, services.store, k=settings.retrieval_k))
+    graph.add_node(
+        "analysis", make_analysis(services.llm, services.store, k=settings.retrieval_k * 2)
+    )
+    graph.add_node("summarize", make_summarize(services.llm, services.store))
+    graph.add_edge(START, "router")
+    graph.add_conditional_edges(
+        "router",
+        route_by_intent,
+        {"qa": "qa", "analysis": "analysis", "summarize": "summarize"},
+    )
+    for name in ("qa", "analysis", "summarize"):
+        graph.add_edge(name, END)
+    return graph.compile(checkpointer=MemorySaver())
