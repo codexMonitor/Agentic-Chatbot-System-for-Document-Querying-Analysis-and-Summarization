@@ -22,9 +22,7 @@ def graph():
 
 
 def ask(graph, question, thread="t1"):
-    return graph.invoke(
-        {"messages": [("user", question)]}, {"configurable": {"thread_id": thread}}
-    )
+    return graph.invoke({"messages": [("user", question)]}, {"configurable": {"thread_id": thread}})
 
 
 @pytest.mark.parametrize(
