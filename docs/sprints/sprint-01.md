@@ -34,6 +34,6 @@ To be filled in after the sprint review.
 
 ## Retrospective
 
-- What went well:
-- What to improve:
-- Actions for the next sprint:
+- What went well: The agent really looks for my specific doc.
+- What to improve: I don't think of anything yet.
+- Actions for the next sprint: It should be in CAPSTONE_PROCEDURES.md already.
