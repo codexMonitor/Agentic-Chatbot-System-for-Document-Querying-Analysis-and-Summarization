@@ -11,6 +11,10 @@ class LLMError(Exception):
     """Any failure talking to an LLM or embedding provider (including rate limits)."""
 
 
+class IndexMismatchError(Exception):
+    """The stored vectors were built with a different embedding model than the configured one."""
+
+
 def _is_retryable(error: Exception) -> bool:
     status = getattr(error, "code", None) or getattr(error, "status_code", None)
     return isinstance(status, int) and status in _RETRYABLE_STATUS

@@ -13,6 +13,10 @@ class LLMService(Protocol):
     def invoke(self, prompt: str) -> str: ...
 
 
+class Embedder(Protocol):
+    def embed(self, texts: list[str]) -> list[list[float]]: ...
+
+
 class VectorStore(Protocol):
     def add(self, source: str, chunks: list[str]) -> None: ...
 

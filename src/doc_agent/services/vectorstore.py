@@ -1,6 +1,7 @@
 import re
 
-from doc_agent.services.base import Chunk
+from doc_agent.services.base import Chunk, Embedder
+from doc_agent.services.errors import IndexMismatchError
 
 _TOKEN_RE = re.compile(r"\w+")
 _STOPWORDS = frozenset(
@@ -36,3 +37,67 @@ class InMemoryVectorStore:
 
     def all_chunks(self) -> list[Chunk]:
         return [chunk for chunk, _ in self._items]
+
+
+class ChromaVectorStore:
+    """Persistent Chroma store. Vectors come from an injected `Embedder`.
+
+    `embedder_id` identifies the embedding model; it is recorded in the collection metadata so
+    vectors from different models are never mixed.
+    """
+
+    COLLECTION = "doc_agent"
+
+    def __init__(self, persist_dir: str, embedder: Embedder, embedder_id: str) -> None:
+        import chromadb
+
+        self._embedder = embedder
+        client = chromadb.PersistentClient(
+            path=persist_dir,
+            settings=chromadb.config.Settings(anonymized_telemetry=False),
+        )
+        self._collection = client.get_or_create_collection(
+            self.COLLECTION, metadata={"hnsw:space": "cosine", "embedder": embedder_id}
+        )
+        recorded = (self._collection.metadata or {}).get("embedder")
+        if recorded != embedder_id:
+            raise IndexMismatchError(
+                f"The vector store in '{persist_dir}' was built with embedder '{recorded}', but "
+                f"'{embedder_id}' is configured. The stored vectors are incompatible: re-ingest "
+                f"your documents after clearing '{persist_dir}', or restore the previous "
+                "DOC_AGENT_EMBEDDING_PROVIDER / DOC_AGENT_EMBEDDING_MODEL."
+            )
+
+    def add(self, source: str, chunks: list[str]) -> None:
+        # Re-adding a source replaces its previous chunks.
+        self._collection.delete(where={"source": source})
+        if not chunks:
+            return
+        self._collection.add(
+            ids=[f"{source}#{position}" for position in range(len(chunks))],
+            documents=chunks,
+            embeddings=self._embedder.embed(chunks),
+            metadatas=[{"source": source, "position": position} for position in range(len(chunks))],
+        )
+
+    def search(self, query: str, k: int = 4) -> list[Chunk]:
+        count = self._collection.count()
+        if count == 0 or k <= 0:
+            return []
+        result = self._collection.query(
+            query_embeddings=self._embedder.embed([query]),
+            n_results=min(k, count),
+            include=["documents", "metadatas"],
+        )
+        return [
+            Chunk(text, str(meta["source"]), int(meta["position"]))
+            for text, meta in zip(result["documents"][0], result["metadatas"][0], strict=True)
+        ]
+
+    def all_chunks(self) -> list[Chunk]:
+        result = self._collection.get(include=["documents", "metadatas"])
+        chunks = [
+            Chunk(text, str(meta["source"]), int(meta["position"]))
+            for text, meta in zip(result["documents"], result["metadatas"], strict=True)
+        ]
+        return sorted(chunks, key=lambda chunk: (chunk.source, chunk.position))
