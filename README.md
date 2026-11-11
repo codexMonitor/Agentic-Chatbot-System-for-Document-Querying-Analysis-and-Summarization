@@ -31,6 +31,30 @@ ruff check .
 pytest -q
 ```
 
+### Pre-commit
+
+```powershell
+pre-commit install            # run the hooks on every commit
+pre-commit run --all-files    # run them once on the whole repo
+```
+
+Hooks: `ruff` (lint), `ruff-format`, trailing whitespace, end-of-file fixer.
+
+### Pinned dependencies
+
+`requirements.lock` pins the exact versions used for development. To reinstall from it:
+
+```powershell
+pip install -r requirements.lock
+pip install -e . --no-deps
+```
+
+To regenerate it, create a fresh venv, run `pip install -e ".[dev]"`, then:
+
+```powershell
+python -c "import subprocess,sys; open('requirements.lock','w',encoding='utf-8',newline='\n').write(subprocess.run([sys.executable,'-m','pip','freeze','--exclude-editable'],capture_output=True,text=True,check=True).stdout)"
+```
+
 ## Layout
 
 ```
