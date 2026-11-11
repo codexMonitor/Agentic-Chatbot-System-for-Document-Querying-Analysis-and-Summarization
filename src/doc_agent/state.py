@@ -11,4 +11,5 @@ class AgentState(TypedDict, total=False):
     messages: Annotated[list, add_messages]
     intent: Intent
     context: list[Chunk]
+    sources: list[dict]
     answer: str
