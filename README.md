@@ -50,6 +50,30 @@ for configured API keys.
 Tracing uploads prompts and document text to LangSmith. Use only public or sample documents when it
 is enabled. Tests always disable tracing and remove the LangSmith key.
 
+## LangGraph Studio
+
+The application supports Python 3.10+, but the current LangGraph CLI requires Python 3.11 or newer.
+In a Python 3.11+ environment, install the optional Studio tools and start the local server:
+
+```powershell
+pip install -e ".[studio]"
+langgraph dev
+```
+
+The LangGraph CLI needs a LangSmith account and API key to connect to Studio; use
+`LANGSMITH_API_KEY` from `.env`. Tracing remains off unless `LANGSMITH_TRACING=true`. Studio runs the
+same graph as the CLI (`rewrite -> router -> chat | qa | analysis | summarize`), with the server's
+own persistence rather than the CLI's SQLite checkpointer. `langgraph.json` registers
+`doc_agent.studio:graph`.
+
+To regenerate the offline graph diagram, run:
+
+```powershell
+python scripts\export_graph.py
+```
+
+This writes `docs/graph.mmd`.
+
 ## Usage
 
 ```powershell
@@ -138,8 +162,9 @@ src/doc_agent/
   prompts.py      prompt templates ("### TASK: <name>", then "---", then payload)
   graph.py        build_graph(services, settings, checkpointer=None): rewrite -> router ->
                   chat | qa | analysis | summarize; SQLite conversation memory and per-node timing logs
+  studio.py       module-level graph for LangGraph Studio (no application checkpointer)
   cli.py          command-line chat loop (--thread, --verbose)
-  nodes/          rewrite.py router.py qa.py analysis.py summarize.py _utils.py (timing, error guard)
+  nodes/          rewrite.py router.py chat.py qa.py analysis.py summarize.py _utils.py (timing, error guard)
   services/       base.py (Chunk + interfaces) llm.py embeddings.py vectorstore.py ingestion.py
                   errors.py (LLMError, call_with_retry) container.py
 tests/            offline tests (real-provider tests are opt-in); tests/data/intents.jsonl

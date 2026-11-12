@@ -21,6 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5", "pre-commit>=3"]
+studio = ["langgraph-cli[inmem]; python_version >= '3.11'"]
 
 [project.scripts]
 doc-agent = "doc_agent.cli:main"

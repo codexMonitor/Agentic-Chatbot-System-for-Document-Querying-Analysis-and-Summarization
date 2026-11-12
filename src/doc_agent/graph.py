@@ -20,6 +20,13 @@ from doc_agent.services.container import Services
 from doc_agent.state import AgentState
 
 
+class _DefaultCheckpointer:
+    pass
+
+
+_DEFAULT_CHECKPOINTER = _DefaultCheckpointer()
+
+
 def route_by_intent(state: AgentState) -> str:
     return state["intent"]
 
@@ -48,10 +55,10 @@ def sqlite_checkpointer(path: Path) -> SqliteSaver:
 def build_graph(
     services: Services,
     settings: Settings | None = None,
-    checkpointer: BaseCheckpointSaver | None = None,
+    checkpointer: BaseCheckpointSaver | None | _DefaultCheckpointer = _DEFAULT_CHECKPOINTER,
 ):
     settings = settings or Settings()
-    if checkpointer is None:
+    if checkpointer is _DEFAULT_CHECKPOINTER:
         checkpointer = sqlite_checkpointer(settings.checkpoint_path)
     graph = StateGraph(AgentState)
 
