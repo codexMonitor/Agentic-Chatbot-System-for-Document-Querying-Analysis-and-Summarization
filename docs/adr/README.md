@@ -9,5 +9,8 @@
 | [0004](0004-llm-provider.md) | LLM provider (Gemini free tier for testing) | Accepted |
 | [0005](0005-vector-store-and-embeddings.md) | Vector store and embeddings | Accepted |
 | [0006](0006-chunking.md) | Chunking | Accepted |
+| [0007](0007-summarization-strategy.md) | Summarization strategy | Accepted |
+| [0008](0008-checkpointing.md) | Checkpointing and conversation memory | Accepted |
+| [0009](0009-nodes-may-use-error-helpers.md) | Nodes may use the provider-neutral error helpers | Accepted |
 
 Open decisions are listed in [proposed.md](proposed.md).

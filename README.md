@@ -50,6 +50,25 @@ Ask questions at the `you>` prompt (`What is Scrum?`, `Summarize the document`,
 (scanned PDFs need OCR and are not supported). Question-answering replies print a `Sources:` block with
 one `[n] file#position` line per chunk given to the model; `[n]` matches the citations in the answer.
 
+Options:
+
+- `--thread <id>` (default `cli`): conversations are saved in SQLite
+  (`DOC_AGENT_CHECKPOINT_DB`, default `.doc_agent_data\checkpoints.sqlite`). Restart with the same id to
+  continue that conversation; use another id for a fresh one. The history is restored, but follow-up
+  questions do not use earlier turns yet ([KI-002](docs/known-issues.md)).
+- `-v` / `--verbose`: log the routing decision and `node=<name> duration_ms=<n>` for every node to stderr.
+
+**Summaries of long documents.** `Summarize the document` summarizes every chunk in parallel and merges
+the summaries in groups until one remains (see [ADR-0007](docs/adr/0007-summarization-strategy.md)).
+Tune it with `DOC_AGENT_SUMMARIZE_WORKERS` (default 2) and `DOC_AGENT_SUMMARIZE_GROUP_SIZE` (default 8).
+It costs about one LLM call per chunk, so on the Gemini free tier (15 requests per minute) a document of
+100 chunks takes many minutes and needs `DOC_AGENT_LLM_MAX_RETRIES=8` so rate-limit errors are waited out.
+
+**Errors.** Rate limits and temporary server errors are retried with exponential backoff
+(`DOC_AGENT_LLM_MAX_RETRIES`, default 3); authentication and configuration errors are not. If the model
+is still unavailable, the chatbot replies "The language model is unavailable. Please try again." instead
+of crashing. API key values are masked in error text.
+
 Development checks (all offline; no API key needed):
 
 ```powershell
@@ -95,17 +114,20 @@ src/doc_agent/
   config.py       Settings + load_settings() (DOC_AGENT_* variables, optional .env)
   state.py        AgentState (messages, intent, context, sources, answer)
   prompts.py      prompt templates ("### TASK: <name>", then "---", then payload)
-  graph.py        build_graph(services, settings): router -> qa | analysis | summarize
-  cli.py          command-line chat loop
-  nodes/          router.py qa.py analysis.py summarize.py
+  graph.py        build_graph(services, settings, checkpointer=None): router -> qa | analysis | summarize;
+                  SQLite conversation memory and per-node timing logs
+  cli.py          command-line chat loop (--thread, --verbose)
+  nodes/          router.py qa.py analysis.py summarize.py _utils.py (timing, error guard)
   services/       base.py (Chunk + interfaces) llm.py embeddings.py vectorstore.py ingestion.py
-                  errors.py container.py
-tests/            offline tests (real-provider tests are opt-in)
+                  errors.py (LLMError, call_with_retry) container.py
+tests/            offline tests (real-provider tests are opt-in); tests/data/intents.jsonl
+                  holds the router examples
 data/sample.txt   demo document
 ```
 
-Nodes depend only on the interfaces in `services/base.py`; `services/container.py` is the only place that
-chooses concrete providers.
+Nodes depend only on the interfaces in `services/base.py` (plus the provider-neutral
+`services/errors.py`, see [ADR-0009](docs/adr/0009-nodes-may-use-error-helpers.md)); `services/container.py`
+is the only place that chooses concrete providers.
 
 ## Extension recipes
 
@@ -113,7 +135,8 @@ chooses concrete providers.
   `add_node` and one router-map entry in `graph.py`, and update the router prompt in `prompts.py`.
 - **New LLM provider (for example OpenAI, xAI, Groq):** add one adapter class in `services/llm.py` that
   implements `invoke(prompt) -> str` and wraps provider exceptions with `call_with_retry` (they become
-  `LLMError`); add one entry to `LLM_PROVIDERS`; add the SDK to `pyproject.toml`; put its key variable
+  `LLMError`, flagged `retryable` for rate limits and temporary server errors); add one entry to
+  `LLM_PROVIDERS`; add the SDK to `pyproject.toml`; put its key variable
   (placeholder only) in `.env.example`. Then set `DOC_AGENT_LLM_PROVIDER` and `DOC_AGENT_LLM_MODEL`. Nodes,
   prompts and the graph do not change.
 - **New embedding provider:** add an adapter implementing `embed(texts)` and one entry in `EMBEDDERS`

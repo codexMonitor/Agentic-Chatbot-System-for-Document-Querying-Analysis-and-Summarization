@@ -3,6 +3,7 @@
 | ID | Title | Status | Planned fix |
 |---|---|---|---|
 | [KI-001](#ki-001-sources-shown-for-unrelated-questions) | Sources shown for unrelated questions | Open | Phase 3 |
+| [KI-002](#ki-002-follow-up-questions-do-not-use-earlier-turns) | Follow-up questions do not use earlier turns | Open | Not scheduled |
 
 ## KI-001: Sources shown for unrelated questions
 
@@ -19,3 +20,18 @@ Chroma returns the nearest `k` chunks even for unrelated questions, so sources a
   can mislead the reader. The "I couldn't find anything relevant" reply is only reached on an empty store.
 - **Planned fix:** Phase 3: add a relevance threshold or retrieval grading, and measure the change with
   the evaluation harness (with and without the fix). Not fixed in Phase 1.
+
+## KI-002: Follow-up questions do not use earlier turns
+
+Since Phase 2 the conversation is saved per `--thread` and restored after a restart, but the router and
+the nodes build their prompts from the latest user message only. A follow-up such as "and who wrote it?"
+is therefore retrieved and answered without the earlier turns.
+
+- **Where:** `last_user_text` in `src/doc_agent/nodes/_utils.py`, used by every node.
+- **Why:** Phase 2 (T2.3) specified persistence only; using the history in prompts (for example
+  rewriting a follow-up into a standalone question) was not specified and is not a new node's worth of
+  work to guess at. See [ADR-0008](adr/0008-checkpointing.md).
+- **Impact:** the Phase 2 manual check "follow-up questions use earlier turns after restarting with the
+  same `--thread`" cannot pass yet: the history is restored (`messages` grows) but not used.
+- **Planned fix:** not scheduled; needs a decision (query rewriting versus passing recent turns to the
+  prompt) and an evaluation case in Phase 3.
