@@ -33,4 +33,3 @@ was searched with those literal words.
   the README and `DOC_AGENT_REWRITE_HISTORY_TURNS`.
 - **Remaining limits:** the rewrite only sees the last `DOC_AGENT_REWRITE_HISTORY_TURNS` messages (each cut
   to 600 characters), and `summarize` always covers the whole document, so it does not read the question.
-
