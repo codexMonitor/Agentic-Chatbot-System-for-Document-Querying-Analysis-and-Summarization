@@ -4,6 +4,7 @@ import re
 from doc_agent.nodes._utils import last_user_text
 from doc_agent.prompts import ROUTER
 from doc_agent.services.base import LLMService
+from doc_agent.services.errors import LLMError
 from doc_agent.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -22,7 +23,13 @@ def parse_intent(raw: str) -> str:
 
 def make_router(llm: LLMService):
     def run(state: AgentState) -> dict:
-        intent = parse_intent(llm.invoke(ROUTER.format(question=last_user_text(state))))
+        try:
+            raw = llm.invoke(ROUTER.format(question=last_user_text(state)))
+        except LLMError as error:
+            # The chosen node makes its own LLM call and reports the outage to the user.
+            logger.warning("router: LLM unavailable (%s), using intent=%s", error, _DEFAULT_INTENT)
+            return {"intent": _DEFAULT_INTENT}
+        intent = parse_intent(raw)
         logger.info("router: intent=%s", intent)
         return {"intent": intent}
 

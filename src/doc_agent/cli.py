@@ -59,7 +59,7 @@ def _run(args: argparse.Namespace) -> int:
     for path in args.files:
         try:
             count = ingest_file(path, services.store, settings.chunk_size, settings.chunk_overlap)
-        except (OSError, ValueError) as error:
+        except (OSError, ValueError, LLMError) as error:
             print(f"! skipped {path}: {error}")
             continue
         print(f"ingested {path.name}: {count} chunks")

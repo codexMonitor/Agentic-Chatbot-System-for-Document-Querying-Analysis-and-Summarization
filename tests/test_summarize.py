@@ -95,7 +95,7 @@ def test_retryable_failure_in_one_worker_does_not_abort_the_summary(monkeypatch)
     assert result["answer"].split() == [f"Schunk-{i:03d}" for i in range(100)]
 
 
-def test_non_retryable_error_stops_the_summary_and_cancels_pending_work():
+def test_non_retryable_error_becomes_a_friendly_answer_and_cancels_pending_work():
     class Broken:
         calls = 0
 
@@ -103,8 +103,9 @@ def test_non_retryable_error_stops_the_summary_and_cancels_pending_work():
             Broken.calls += 1
             raise LLMError("API key rejected")
 
-    with pytest.raises(LLMError, match="rejected"):
-        summarize(Broken(), 50, workers=1)
+    result = summarize(Broken(), 50, workers=1)
+    assert "unavailable" in result["answer"]
+    assert result["sources"] == []
     assert Broken.calls < 50
 
 

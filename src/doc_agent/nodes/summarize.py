@@ -3,7 +3,7 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from typing import TypeVar
 
-from doc_agent.nodes._utils import reply
+from doc_agent.nodes._utils import guard_llm_errors, reply
 from doc_agent.prompts import SUMMARIZE_CHUNK, SUMMARIZE_REDUCE
 from doc_agent.services.base import LLMService, VectorStore
 from doc_agent.services.errors import call_with_retry
@@ -65,4 +65,4 @@ def make_summarize(
         # Summaries are not cited per chunk; empty sources also clear stale ones from earlier turns.
         return reply(summaries[0], context=chunks, sources=[])
 
-    return run
+    return guard_llm_errors("summarize", run)

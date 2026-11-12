@@ -1,3 +1,4 @@
+import os
 import time
 from collections.abc import Callable
 from typing import TypeVar
@@ -5,17 +6,27 @@ from typing import TypeVar
 T = TypeVar("T")
 
 _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
+_MIN_SECRET_LENGTH = 6
+
+
+def mask_secrets(text: str) -> str:
+    """Replace the value of every configured `*API_KEY` environment variable with `***`."""
+    for name, value in os.environ.items():
+        if name.upper().endswith("API_KEY") and len(value.strip()) >= _MIN_SECRET_LENGTH:
+            text = text.replace(value.strip(), "***")
+    return text
 
 
 class LLMError(Exception):
     """Any failure talking to an LLM or embedding provider (including rate limits).
 
     `retryable` marks transient failures (rate limits, temporary server errors) that a caller
-    may retry; authentication and configuration errors leave it False.
+    may retry; authentication and configuration errors leave it False. The message is masked,
+    so a key echoed back by an SDK never reaches logs or the console.
     """
 
     def __init__(self, message: str = "", *, retryable: bool = False) -> None:
-        super().__init__(message)
+        super().__init__(mask_secrets(message))
         self.retryable = retryable
 
 
