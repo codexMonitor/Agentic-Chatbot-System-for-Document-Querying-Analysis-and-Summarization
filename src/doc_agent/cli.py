@@ -21,6 +21,11 @@ def main(argv: list[str] | None = None) -> int:
     _use_utf8_output()
     parser = argparse.ArgumentParser(prog="doc-agent", description="Chat with your documents.")
     parser.add_argument("files", nargs="*", type=Path, help="documents to ingest")
+    parser.add_argument(
+        "--thread",
+        default="cli",
+        help="conversation id; reuse it to continue an earlier conversation (default: cli)",
+    )
     args = parser.parse_args(argv)
 
     settings = load_settings()
@@ -38,7 +43,17 @@ def main(argv: list[str] | None = None) -> int:
         print(f"ingested {path.name}: {count} chunks")
 
     graph = build_graph(services, settings)
-    config = {"configurable": {"thread_id": "cli"}}
+    config = {"configurable": {"thread_id": args.thread}}
+    try:
+        _chat_loop(graph, config)
+    finally:
+        connection = getattr(graph.checkpointer, "conn", None)
+        if connection is not None:
+            connection.close()
+    return 0
+
+
+def _chat_loop(graph, config: dict) -> None:
     while True:
         try:
             question = input("you> ").strip()
@@ -55,4 +70,3 @@ def main(argv: list[str] | None = None) -> int:
             print("Sources:")
             for item in sources:
                 print(f"[{item['n']}] {item['source']}#{item['position']}")
-    return 0

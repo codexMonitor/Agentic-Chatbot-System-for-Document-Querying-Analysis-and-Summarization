@@ -1,7 +1,7 @@
 import pytest
 
 from doc_agent.config import Settings
-from doc_agent.graph import build_graph
+from doc_agent.graph import build_graph, memory_checkpointer
 from doc_agent.services import Services
 from doc_agent.services.base import Chunk
 from doc_agent.services.ingestion import split_text
@@ -19,7 +19,7 @@ CHUNKS = [
 def graph():
     store = InMemoryVectorStore()
     store.add("notes.txt", CHUNKS)
-    return build_graph(Services(llm=FakeLLM(), store=store), Settings())
+    return build_graph(Services(llm=FakeLLM(), store=store), Settings(), memory_checkpointer())
 
 
 def ask(graph, question, thread="t1"):
@@ -55,7 +55,7 @@ def test_qa_sources_are_numbered_in_context_order():
     store = InMemoryVectorStore()
     store.add("a.txt", ["scrum sprint planning", "unrelated text"])
     store.add("b.txt", ["scrum retrospective", "scrum sprint review sprint"])
-    graph = build_graph(Services(llm=FakeLLM(), store=store), Settings())
+    graph = build_graph(Services(llm=FakeLLM(), store=store), Settings(), memory_checkpointer())
     result = ask(graph, "scrum sprint")
     assert [s["n"] for s in result["sources"]] == [1, 2, 3]
     assert [(s["source"], s["position"]) for s in result["sources"]] == [
@@ -73,7 +73,9 @@ def test_qa_prompt_labels_chunks_with_source_and_position():
 
     store = InMemoryVectorStore()
     store.add("notes.txt", CHUNKS)
-    graph = build_graph(Services(llm=RecordingLLM(), store=store), Settings())
+    graph = build_graph(
+        Services(llm=RecordingLLM(), store=store), Settings(), memory_checkpointer()
+    )
     ask(graph, "What is Scrum?")
     qa_prompt = next(prompt for prompt in prompts if prompt.startswith("### TASK: qa"))
     assert "[1] (notes.txt#1) Scrum organizes work" in qa_prompt
@@ -124,7 +126,9 @@ def test_adding_a_source_again_replaces_its_chunks():
 
 
 def test_summarize_empty_store():
-    graph = build_graph(Services(llm=FakeLLM(), store=InMemoryVectorStore()), Settings())
+    graph = build_graph(
+        Services(llm=FakeLLM(), store=InMemoryVectorStore()), Settings(), memory_checkpointer()
+    )
     result = ask(graph, "Summarize the document")
     assert "No documents" in result["answer"]
 
