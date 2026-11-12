@@ -42,10 +42,13 @@ Request: {question}"""
 
 SUMMARIZE_CHUNK = """### TASK: summarize_chunk
 Summarize the following text in one or two sentences.
+Write the summary in the same language as the text.
 ---
 {chunk}"""
 
 SUMMARIZE_REDUCE = """### TASK: summarize_reduce
-Combine these partial summaries into one coherent summary of the whole document.
+Combine these partial summaries, which are in document order, into one coherent summary
+of the text they cover. Remove repetition and keep the key facts.
+Write the summary in the same language as the partial summaries.
 ---
 {partials}"""

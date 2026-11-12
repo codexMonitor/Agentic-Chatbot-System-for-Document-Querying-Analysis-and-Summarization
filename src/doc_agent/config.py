@@ -18,6 +18,8 @@ class Settings:
     retrieval_k: int = 4
     llm_timeout_s: float = 60.0
     llm_max_retries: int = 3
+    summarize_workers: int = 2
+    summarize_group_size: int = 8
 
 
 def load_settings() -> Settings:
@@ -37,4 +39,8 @@ def load_settings() -> Settings:
         retrieval_k=int(env.get("DOC_AGENT_RETRIEVAL_K", defaults.retrieval_k)),
         llm_timeout_s=float(env.get("DOC_AGENT_LLM_TIMEOUT_S", defaults.llm_timeout_s)),
         llm_max_retries=int(env.get("DOC_AGENT_LLM_MAX_RETRIES", defaults.llm_max_retries)),
+        summarize_workers=int(env.get("DOC_AGENT_SUMMARIZE_WORKERS", defaults.summarize_workers)),
+        summarize_group_size=int(
+            env.get("DOC_AGENT_SUMMARIZE_GROUP_SIZE", defaults.summarize_group_size)
+        ),
     )

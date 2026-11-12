@@ -33,7 +33,16 @@ def build_graph(services: Services, settings: Settings | None = None):
     graph.add_node(
         "analysis", make_analysis(services.llm, services.store, k=settings.retrieval_k * 2)
     )
-    graph.add_node("summarize", make_summarize(services.llm, services.store))
+    graph.add_node(
+        "summarize",
+        make_summarize(
+            services.llm,
+            services.store,
+            workers=settings.summarize_workers,
+            group_size=settings.summarize_group_size,
+            max_retries=settings.llm_max_retries,
+        ),
+    )
     graph.add_edge(START, "router")
     graph.add_conditional_edges(
         "router",

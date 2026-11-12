@@ -8,7 +8,15 @@ _RETRYABLE_STATUS = {429, 500, 502, 503, 504}
 
 
 class LLMError(Exception):
-    """Any failure talking to an LLM or embedding provider (including rate limits)."""
+    """Any failure talking to an LLM or embedding provider (including rate limits).
+
+    `retryable` marks transient failures (rate limits, temporary server errors) that a caller
+    may retry; authentication and configuration errors leave it False.
+    """
+
+    def __init__(self, message: str = "", *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
 
 
 class IndexMismatchError(Exception):
@@ -26,21 +34,27 @@ def call_with_retry(
     max_retries: int,
     what: str,
     base_delay_s: float = 1.0,
-    sleep: Callable[[float], None] = time.sleep,
+    sleep: Callable[[float], None] | None = None,
 ) -> T:
     """Run `func`, retrying rate-limit/server errors with exponential backoff.
 
-    Every provider exception is re-raised as `LLMError`; the API key is never included.
+    Every provider exception is re-raised as `LLMError` (flagged `retryable` when it was a
+    transient one); an `LLMError` raised by `func` is retried only if it is flagged `retryable`.
+    The API key is never included.
     """
     attempt = 0
     while True:
         try:
             return func()
-        except LLMError:
-            raise
+        except LLMError as error:
+            if not (error.retryable and attempt < max_retries):
+                raise
         except Exception as error:
-            if _is_retryable(error) and attempt < max_retries:
-                sleep(base_delay_s * 2**attempt)
-                attempt += 1
-                continue
-            raise LLMError(f"{what} failed: {type(error).__name__}: {error}") from error
+            retryable = _is_retryable(error)
+            if not (retryable and attempt < max_retries):
+                raise LLMError(
+                    f"{what} failed: {type(error).__name__}: {error}", retryable=retryable
+                ) from error
+        # Resolved per call so tests can patch `time.sleep`.
+        (sleep or time.sleep)(base_delay_s * 2**attempt)
+        attempt += 1
