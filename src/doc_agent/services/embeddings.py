@@ -4,12 +4,51 @@ import re
 from collections.abc import Callable
 from typing import Any
 
+from langsmith import traceable
+
 from doc_agent.config import Settings
 from doc_agent.services._gemini import make_gemini_client
 from doc_agent.services.base import Embedder
-from doc_agent.services.errors import LLMError, call_with_retry
+from doc_agent.services.errors import LLMError, call_with_retry, mask_secrets
 
 _TOKEN_RE = re.compile(r"\w+")
+
+
+def _trace_inputs(inputs: dict) -> dict:
+    texts = inputs.get("texts", [])
+    return {"texts": [mask_secrets(str(text)) for text in texts]}
+
+
+def _usage_metadata(response: Any) -> dict[str, int] | None:
+    usage = getattr(response, "usage_metadata", None)
+    if usage is None:
+        return None
+
+    names = {
+        "input_tokens": ("input_tokens", "prompt_token_count", "prompt_tokens"),
+        "total_tokens": ("total_tokens", "total_token_count"),
+    }
+    counts: dict[str, int] = {}
+    for target, candidates in names.items():
+        for name in candidates:
+            value = usage.get(name) if isinstance(usage, dict) else getattr(usage, name, None)
+            if isinstance(value, int) and not isinstance(value, bool):
+                counts[target] = value
+                break
+    return counts or None
+
+
+def _trace_embedding_output(response: Any) -> dict:
+    output = {
+        "embeddings": [
+            {"embedding": [float(value) for value in item.values]}
+            for item in (getattr(response, "embeddings", None) or [])
+        ]
+    }
+    usage = _usage_metadata(response)
+    if usage is not None:
+        output["usage_metadata"] = usage
+    return output
 
 
 class FakeEmbedder:
@@ -45,18 +84,21 @@ class GeminiEmbedder:
         self._max_retries = settings.llm_max_retries
         self._batch_size = batch_size
         self._client = client if client is not None else make_gemini_client(settings)
+        self._traced_embed_content = traceable(
+            self._embed_content,
+            run_type="embedding",
+            name="Gemini embeddings",
+            metadata={"ls_provider": "google_genai", "ls_model_name": self._model},
+            process_inputs=_trace_inputs,
+            process_outputs=_trace_embedding_output,
+            exceptions_to_handle=(LLMError,),
+        )
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         vectors: list[list[float]] = []
         for start in range(0, len(texts), self._batch_size):
             batch = texts[start : start + self._batch_size]
-            response = call_with_retry(
-                lambda batch=batch: self._client.models.embed_content(
-                    model=self._model, contents=batch
-                ),
-                max_retries=self._max_retries,
-                what=f"Gemini embedding model '{self._model}'",
-            )
+            response = self._traced_embed_content(batch)
             embeddings = getattr(response, "embeddings", None) or []
             if len(embeddings) != len(batch):
                 raise LLMError(
@@ -65,6 +107,13 @@ class GeminiEmbedder:
                 )
             vectors.extend([float(value) for value in item.values] for item in embeddings)
         return vectors
+
+    def _embed_content(self, texts: list[str]) -> Any:
+        return call_with_retry(
+            lambda: self._client.models.embed_content(model=self._model, contents=texts),
+            max_retries=self._max_retries,
+            what=f"Gemini embedding model '{self._model}'",
+        )
 
 
 EMBEDDERS: dict[str, Callable[[Settings], Embedder]] = {

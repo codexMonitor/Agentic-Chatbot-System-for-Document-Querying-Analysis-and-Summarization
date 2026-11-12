@@ -39,6 +39,17 @@ stored under `DOC_AGENT_PERSIST_DIR` together with the name of the embedding mod
 incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. Free-tier
 Gemini data may be used by Google for training, so use only public or sample documents.
 
+## LangSmith tracing
+
+Tracing is off by default. To enable it, set `LANGSMITH_TRACING=true`, put your key in
+`LANGSMITH_API_KEY`, and choose `LANGSMITH_PROJECT` (defaults to `doc-agent`). LangGraph runs and
+Gemini chat and embedding calls then appear as traces with provider/model metadata and latency;
+token counts are included when the SDK response exposes them. Trace inputs and outputs are masked
+for configured API keys.
+
+Tracing uploads prompts and document text to LangSmith. Use only public or sample documents when it
+is enabled. Tests always disable tracing and remove the LangSmith key.
+
 ## Usage
 
 ```powershell
