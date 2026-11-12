@@ -59,6 +59,31 @@ restarting the CLI with the same `--thread` (should now pass, see KI-002). If yo
 sets `DOC_AGENT_LLM_MAX_RETRIES=3`, change it to 8 (a real environment variable or `.env` value
 overrides the new default).
 
+## Phase 2B: Plan alignment (continued)
+
+### Done
+
+- [x] T2B.1 Query-check chat route for greetings, thanks, and assistant meta questions; document
+  questions continue to route to QA, analysis, or summarization.
+- [x] T2B.2 Opt-in LangSmith tracing for the LangGraph run and Gemini chat/embedding calls;
+  tracing is forced off in tests.
+- [x] T2B.3 LangGraph Studio configuration, offline graph export, and `docs/graph.mmd`.
+- [x] T2B.4 Deterministic simulated-rate-limit summarization test and documentation updates.
+
+Measurements:
+
+| Measurement | Result |
+|---|---|
+| Router accuracy, `FakeLLM` (offline, 26 examples) | 0.81 |
+| Router accuracy, real `gemini-3.5-flash-lite` (26 examples, one run) | 0.96 |
+| Studio environment used for validation | Python 3.12.7; `langgraph-cli` 0.4.42 |
+| Traced sample question | `What is Scrum?` returned a cited answer from `data/sample.txt` |
+| Deterministic rate-limit test | 10/10 consecutive runs passed with logical time and fixed jitter |
+
+The six new chat intent examples are agent-drafted and await human review. The LangGraph CLI
+requires Python 3.11+, while the application continues to support Python 3.10+. The human should
+still run `langgraph dev` and capture the requested Studio screenshot.
+
 ## Review
 
 To be filled in after the sprint review.

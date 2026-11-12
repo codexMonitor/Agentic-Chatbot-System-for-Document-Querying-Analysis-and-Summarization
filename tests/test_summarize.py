@@ -138,21 +138,20 @@ def test_invalid_settings_are_rejected(workers, group_size):
         make_summarize(CountingLLM(), make_store(1), workers=workers, group_size=group_size)
 
 
-_REAL_SLEEP = time.sleep
-CLOCK_SCALE = 200  # one real second is 200 simulated seconds
-
-
 class VirtualClock:
-    """Runs time `CLOCK_SCALE` times faster, so concurrent workers still see consistent time."""
+    """A lock-protected logical clock; sleeps advance time without wall-clock scheduling."""
 
     def __init__(self) -> None:
-        self._start = time.monotonic()
+        self._now = 0.0
+        self._lock = threading.Lock()
 
     def now(self) -> float:
-        return (time.monotonic() - self._start) * CLOCK_SCALE
+        with self._lock:
+            return self._now
 
     def sleep(self, seconds: float) -> None:
-        _REAL_SLEEP(seconds / CLOCK_SCALE)
+        with self._lock:
+            self._now += seconds
 
 
 class QuotaError(Exception):
@@ -195,6 +194,7 @@ class RateLimitedClient:
 def test_rate_limited_summarization_completes_with_default_settings(monkeypatch):
     clock = VirtualClock()
     monkeypatch.setattr("doc_agent.services.errors.time.sleep", clock.sleep)
+    monkeypatch.setattr("doc_agent.services.errors.random.random", lambda: 0.0)
     settings = Settings(llm_model="m")  # default retries, workers and group size
     inner = CountingLLM()
     client = RateLimitedClient(clock, inner)
