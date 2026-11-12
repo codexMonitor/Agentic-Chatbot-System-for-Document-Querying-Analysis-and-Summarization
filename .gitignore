@@ -1,4 +1,4 @@
-CAPSTONE_PROCEDURES.md
+docs/CAPSTONE_PROCEDURES.md
 .venv/
 __pycache__/
 *.egg-info/
@@ -6,3 +6,5 @@ __pycache__/
 .ruff_cache/
 .env
 .doc_agent_data/
+test.py
+AGENTS.md

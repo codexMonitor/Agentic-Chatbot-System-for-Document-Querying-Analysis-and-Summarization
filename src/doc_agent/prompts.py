@@ -7,9 +7,10 @@ Classify the user's request. Reply with exactly one word: qa, analysis, or summa
 {question}"""
 
 QA = """### TASK: qa
-Answer the question using only the context below.
-Cite the chunk numbers you used, like [1].
-If the answer is not in the context, say so.
+Answer the question using only the numbered context below.
+Cite every fact with the number of the chunk it came from, like [1] or [2].
+If the answer is not in the context, reply that it is not in the documents.
+Answer in the language of the question.
 ---
 Context:
 {context}

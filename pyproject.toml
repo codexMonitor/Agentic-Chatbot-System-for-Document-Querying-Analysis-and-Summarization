@@ -8,7 +8,14 @@ version = "0.1.0"
 description = "Agentic chatbot for document querying, analysis, and summarization (LangGraph)."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["langgraph>=0.2"]
+dependencies = [
+    "langgraph>=0.2",
+    "python-dotenv>=1.0",
+    "google-genai>=1.0",
+    "chromadb>=1.5,<2",
+    "pypdf>=5",
+    "python-docx>=1.1",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff>=0.5", "pre-commit>=3"]
@@ -21,6 +28,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = ["real: needs a real provider; runs only with DOC_AGENT_RUN_REAL=1"]
 
 [tool.ruff]
 line-length = 100
