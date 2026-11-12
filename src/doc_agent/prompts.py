@@ -3,6 +3,20 @@ Classify the user's request. Reply with exactly one word: qa, analysis, or summa
 - qa: a specific question answerable from the documents.
 - analysis: comparing, extracting, or analysing information across the documents.
 - summarize: a summary or overview of the documents.
+
+Examples:
+Request: What is the notice period in the contract?
+Intent: qa
+Request: Ai là tác giả của báo cáo này?
+Intent: qa
+Request: Compare the two proposals and list the differences.
+Intent: analysis
+Request: Extract all deadlines mentioned in the documents.
+Intent: analysis
+Request: Give me a brief overview of the document.
+Intent: summarize
+Request: Tóm tắt tài liệu này.
+Intent: summarize
 ---
 {question}"""
 

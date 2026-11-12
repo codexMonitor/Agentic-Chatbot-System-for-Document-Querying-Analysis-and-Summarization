@@ -1,0 +1,20 @@
+{"question": "What is Scrum?", "intent": "qa"}
+{"question": "Who wrote the paper and in what year was it published?", "intent": "qa"}
+{"question": "Which embedding model does the system use?", "intent": "qa"}
+{"question": "What sprint length did the supervisor confirm?", "intent": "qa"}
+{"question": "Khi nào hợp đồng có hiệu lực?", "intent": "qa"}
+{"question": "What does the abstract say about the experimental setup?", "intent": "qa"}
+{"question": "Where is the vector database stored on disk?", "intent": "qa"}
+{"question": "Compare LangGraph and Scrum.", "intent": "analysis"}
+{"question": "List every person named in the documents together with their role.", "intent": "analysis"}
+{"question": "What are the pros and cons of the proposed method?", "intent": "analysis"}
+{"question": "Analyze how the two reports differ in their conclusions.", "intent": "analysis"}
+{"question": "So sánh hai phương pháp được mô tả trong tài liệu.", "intent": "analysis"}
+{"question": "Extract the main risks mentioned across the documents and group them by theme.", "intent": "analysis"}
+{"question": "Identify the recurring themes across all uploaded documents.", "intent": "analysis"}
+{"question": "Summarize the document.", "intent": "summarize"}
+{"question": "Give me a short overview of this paper.", "intent": "summarize"}
+{"question": "TL;DR please.", "intent": "summarize"}
+{"question": "Can you give me the gist of the whole report in a few sentences?", "intent": "summarize"}
+{"question": "Cho tôi bản tóm tắt ngắn gọn của báo cáo.", "intent": "summarize"}
+{"question": "Write a one-paragraph summary of the uploaded files.", "intent": "summarize"}
