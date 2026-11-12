@@ -10,6 +10,7 @@ from langgraph.graph import END, START, StateGraph
 from doc_agent.config import Settings
 from doc_agent.nodes._utils import timed
 from doc_agent.nodes.analysis import make_analysis
+from doc_agent.nodes.chat import make_chat
 from doc_agent.nodes.qa import make_qa
 from doc_agent.nodes.rewrite import make_rewrite
 from doc_agent.nodes.router import make_router
@@ -59,6 +60,7 @@ def build_graph(
 
     add_node("rewrite", make_rewrite(services.llm, history_turns=settings.rewrite_history_turns))
     add_node("router", make_router(services.llm))
+    add_node("chat", make_chat(services.llm))
     add_node("qa", make_qa(services.llm, services.store, k=settings.retrieval_k))
     add_node("analysis", make_analysis(services.llm, services.store, k=settings.retrieval_k * 2))
     add_node(
@@ -75,8 +77,8 @@ def build_graph(
     graph.add_conditional_edges(
         "router",
         route_by_intent,
-        {"qa": "qa", "analysis": "analysis", "summarize": "summarize"},
+        {"chat": "chat", "qa": "qa", "analysis": "analysis", "summarize": "summarize"},
     )
-    for name in ("qa", "analysis", "summarize"):
+    for name in ("chat", "qa", "analysis", "summarize"):
         graph.add_edge(name, END)
     return graph.compile(checkpointer=checkpointer)

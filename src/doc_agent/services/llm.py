@@ -10,6 +10,29 @@ from doc_agent.services.errors import LLMError, call_with_retry
 _TASK_RE = re.compile(r"### TASK: (\w+)")
 _SUMMARIZE_HINTS = ("summar", "tl;dr", "overview")
 _ANALYSIS_HINTS = ("analy", "compare", "extract", "key points", "pros and cons")
+_CHAT_QUESTIONS = {
+    "hello",
+    "hello there",
+    "hi",
+    "hi there",
+    "hey",
+    "thanks",
+    "thank you",
+    "thanks for your help",
+    "what can you do",
+    "how can you help",
+    "how do i use this assistant",
+    "xin chào",
+    "chào bạn",
+    "cảm ơn",
+    "cảm ơn bạn",
+    "bạn có thể làm gì",
+}
+
+
+def _is_chat_question(question: str) -> bool:
+    normalized = " ".join(re.sub(r"[^\w\s]", " ", question.lower()).split())
+    return normalized in _CHAT_QUESTIONS
 
 
 class FakeLLM:
@@ -21,11 +44,20 @@ class FakeLLM:
         task = match.group(1) if match else "unknown"
         if task == "route":
             text = payload.lower()
+            if _is_chat_question(payload):
+                return "chat"
             if any(hint in text for hint in _SUMMARIZE_HINTS):
                 return "summarize"
             if any(hint in text for hint in _ANALYSIS_HINTS):
                 return "analysis"
             return "qa"
+        if task == "chat":
+            if not _is_chat_question(payload):
+                return "I can only help with your uploaded documents."
+            return (
+                "I can answer questions about, analyze, and summarize uploaded documents "
+                "with citations."
+            )
         if task == "rewrite":
             return payload.rpartition("New question:")[2].strip()
         return f"[fake-llm:{task}] " + " ".join(payload.split())[:200]

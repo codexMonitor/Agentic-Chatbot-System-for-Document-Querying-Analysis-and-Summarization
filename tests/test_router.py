@@ -11,7 +11,7 @@ from doc_agent.prompts import ROUTER
 from doc_agent.services.llm import FakeLLM, GeminiLLM
 
 INTENTS_FILE = Path(__file__).parent / "data" / "intents.jsonl"
-INTENTS = ("qa", "analysis", "summarize")
+INTENTS = ("chat", "qa", "analysis", "summarize")
 
 
 def load_examples() -> list[dict]:
@@ -82,7 +82,7 @@ def test_router_prompt_keeps_task_header_and_separator():
 
 def test_intents_file_is_well_formed_and_balanced():
     examples = load_examples()
-    assert len(examples) == 20
+    assert len(examples) == 26
     assert all(set(item) == {"question", "intent"} for item in examples)
     counts = Counter(item["intent"] for item in examples)
     assert set(counts) == set(INTENTS)
@@ -95,6 +95,21 @@ def test_fake_llm_router_accuracy_on_intents_file():
     print(f"router accuracy (FakeLLM, offline): {score:.2f} on {len(examples)} examples")
     # The fake router only knows English keywords, so this is a regression floor, not a quality bar.
     assert score >= 0.75
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Hello!",
+        "Thanks for your help.",
+        "What can you do?",
+        "How do I use this assistant?",
+        "Xin chào!",
+        "Bạn có thể làm gì?",
+    ],
+)
+def test_fake_llm_routes_chat_examples(question):
+    assert route(FakeLLM(), question) == "chat"
 
 
 @pytest.mark.real

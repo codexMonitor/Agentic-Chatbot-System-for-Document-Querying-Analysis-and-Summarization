@@ -18,3 +18,9 @@
 {"question": "Can you give me the gist of the whole report in a few sentences?", "intent": "summarize"}
 {"question": "Cho tôi bản tóm tắt ngắn gọn của báo cáo.", "intent": "summarize"}
 {"question": "Write a one-paragraph summary of the uploaded files.", "intent": "summarize"}
+{"question": "Hello!", "intent": "chat"}
+{"question": "Thanks for your help.", "intent": "chat"}
+{"question": "What can you do?", "intent": "chat"}
+{"question": "How do I use this assistant?", "intent": "chat"}
+{"question": "Xin chào!", "intent": "chat"}
+{"question": "Bạn có thể làm gì?", "intent": "chat"}

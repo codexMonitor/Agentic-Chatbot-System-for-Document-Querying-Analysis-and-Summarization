@@ -2,7 +2,7 @@
 My capstone project.
 
 The Python package is `doc_agent` (distribution `doc-agent`). It is a LangGraph chatbot that routes each
-question to document question-answering, analysis, or summarization. By default it runs fully offline
+question to a short chat, document question-answering, analysis, or summarization. By default it runs fully offline
 with a fake LLM, a fake embedder and an in-memory vector store; with a Gemini key it ingests PDF, DOCX,
 TXT and MD files and answers with source citations.
 
@@ -126,7 +126,7 @@ src/doc_agent/
   state.py        AgentState (messages, standalone_question, intent, context, sources, answer)
   prompts.py      prompt templates ("### TASK: <name>", then "---", then payload)
   graph.py        build_graph(services, settings, checkpointer=None): rewrite -> router ->
-                  qa | analysis | summarize; SQLite conversation memory and per-node timing logs
+                  chat | qa | analysis | summarize; SQLite conversation memory and per-node timing logs
   cli.py          command-line chat loop (--thread, --verbose)
   nodes/          rewrite.py router.py qa.py analysis.py summarize.py _utils.py (timing, error guard)
   services/       base.py (Chunk + interfaces) llm.py embeddings.py vectorstore.py ingestion.py
@@ -135,6 +135,8 @@ tests/            offline tests (real-provider tests are opt-in); tests/data/int
                   holds the router examples
 data/sample.txt   demo document
 ```
+
+The six `chat` examples in `tests/data/intents.jsonl` are agent-drafted and await human review.
 
 Nodes depend only on the interfaces in `services/base.py` (plus the provider-neutral
 `services/errors.py`, see [ADR-0009](docs/adr/0009-nodes-may-use-error-helpers.md)); `services/container.py`

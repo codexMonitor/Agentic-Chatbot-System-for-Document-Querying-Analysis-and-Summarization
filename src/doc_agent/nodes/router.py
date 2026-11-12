@@ -9,7 +9,7 @@ from doc_agent.state import AgentState
 
 logger = logging.getLogger(__name__)
 
-_INTENTS = {"qa", "analysis", "summarize"}
+_INTENTS = {"chat", "qa", "analysis", "summarize"}
 _DEFAULT_INTENT = "qa"
 
 

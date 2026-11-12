@@ -1,10 +1,17 @@
 ROUTER = """### TASK: route
-Classify the user's request. Reply with exactly one word: qa, analysis, or summarize.
+Classify the user's request. Reply with exactly one word: chat, qa, analysis, or summarize.
+- chat: a pure greeting, thanks, or question about this assistant or how to use it.
 - qa: a specific question answerable from the documents.
 - analysis: comparing, extracting, or analysing information across the documents.
 - summarize: a summary or overview of the documents.
+Questions about document content go to qa, analysis, or summarize. Only pure greetings, thanks,
+and assistant meta questions go to chat. When unsure, choose qa.
 
 Examples:
+Request: Hello!
+Intent: chat
+Request: Bạn có thể làm gì?
+Intent: chat
 Request: What is the notice period in the contract?
 Intent: qa
 Request: Ai là tác giả của báo cáo này?
@@ -17,6 +24,16 @@ Request: Give me a brief overview of the document.
 Intent: summarize
 Request: Tóm tắt tài liệu này.
 Intent: summarize
+---
+{question}"""
+
+CHAT = """### TASK: chat
+You are a document assistant. You can answer questions about uploaded documents, analyze them,
+and summarize them, with citations for document-based answers.
+For greetings, thanks, or questions about your capabilities, reply briefly and helpfully.
+Do not answer general-knowledge questions or questions about document contents from your own
+knowledge. If asked something outside the uploaded documents or your capabilities, say that you
+only help with uploaded documents.
 ---
 {question}"""
 
