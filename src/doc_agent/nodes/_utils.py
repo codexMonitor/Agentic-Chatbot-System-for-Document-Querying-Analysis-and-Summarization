@@ -1,7 +1,27 @@
+import logging
+import time
+from collections.abc import Callable
+
 from langchain_core.messages import AIMessage
 
 from doc_agent.services.base import Chunk
 from doc_agent.state import AgentState
+
+logger = logging.getLogger(__name__)
+
+
+def timed(name: str, fn: Callable[[AgentState], dict]) -> Callable[[AgentState], dict]:
+    """Wrap a node so each run logs `node=<name> duration_ms=<n>`; the return value is unchanged."""
+
+    def run(state: AgentState) -> dict:
+        start = time.perf_counter()
+        try:
+            return fn(state)
+        finally:
+            duration_ms = round((time.perf_counter() - start) * 1000)
+            logger.info("node=%s duration_ms=%d", name, duration_ms)
+
+    return run
 
 
 def last_user_text(state: AgentState) -> str:

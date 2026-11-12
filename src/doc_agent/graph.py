@@ -8,6 +8,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 
 from doc_agent.config import Settings
+from doc_agent.nodes._utils import timed
 from doc_agent.nodes.analysis import make_analysis
 from doc_agent.nodes.qa import make_qa
 from doc_agent.nodes.router import make_router
@@ -51,12 +52,14 @@ def build_graph(
     if checkpointer is None:
         checkpointer = sqlite_checkpointer(settings.checkpoint_path)
     graph = StateGraph(AgentState)
-    graph.add_node("router", make_router(services.llm))
-    graph.add_node("qa", make_qa(services.llm, services.store, k=settings.retrieval_k))
-    graph.add_node(
-        "analysis", make_analysis(services.llm, services.store, k=settings.retrieval_k * 2)
-    )
-    graph.add_node(
+
+    def add_node(name: str, run) -> None:
+        graph.add_node(name, timed(name, run))
+
+    add_node("router", make_router(services.llm))
+    add_node("qa", make_qa(services.llm, services.store, k=settings.retrieval_k))
+    add_node("analysis", make_analysis(services.llm, services.store, k=settings.retrieval_k * 2))
+    add_node(
         "summarize",
         make_summarize(
             services.llm,

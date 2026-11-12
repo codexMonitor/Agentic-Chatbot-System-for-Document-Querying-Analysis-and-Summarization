@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 from pathlib import Path
 
@@ -17,6 +18,15 @@ def _use_utf8_output() -> None:
             reconfigure(encoding="utf-8", errors="replace")
 
 
+def _enable_logging() -> logging.Handler:
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter("%(name)s: %(message)s"))
+    logger = logging.getLogger("doc_agent")
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    return handler
+
+
 def main(argv: list[str] | None = None) -> int:
     _use_utf8_output()
     parser = argparse.ArgumentParser(prog="doc-agent", description="Chat with your documents.")
@@ -26,8 +36,20 @@ def main(argv: list[str] | None = None) -> int:
         default="cli",
         help="conversation id; reuse it to continue an earlier conversation (default: cli)",
     )
+    parser.add_argument(
+        "-v", "--verbose", action="store_true", help="log routing decisions and node timings"
+    )
     args = parser.parse_args(argv)
 
+    handler = _enable_logging() if args.verbose else None
+    try:
+        return _run(args)
+    finally:
+        if handler is not None:
+            logging.getLogger("doc_agent").removeHandler(handler)
+
+
+def _run(args: argparse.Namespace) -> int:
     settings = load_settings()
     try:
         services = build_services(settings)

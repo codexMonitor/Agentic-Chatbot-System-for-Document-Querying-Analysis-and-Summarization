@@ -109,6 +109,18 @@ def test_cli_thread_option_continues_the_same_conversation(offline_cli, tmp_path
     assert message_count(tmp_path, "cli") == 0
 
 
+def test_cli_verbose_prints_timings_to_stderr(offline_cli, capsys):
+    offline_cli("--verbose", lines=["What is Scrum?", "quit"])
+    err = capsys.readouterr().err
+    assert "node=router duration_ms=" in err
+    assert "node=qa duration_ms=" in err
+
+
+def test_cli_is_quiet_by_default(offline_cli, capsys):
+    offline_cli(lines=["What is Scrum?", "quit"])
+    assert "duration_ms" not in capsys.readouterr().err
+
+
 def test_cli_default_thread_is_cli(offline_cli, tmp_path):
     offline_cli(lines=["What is Scrum?", "quit"])
     assert message_count(tmp_path, "cli") == 2
