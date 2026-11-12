@@ -75,7 +75,9 @@ def test_backoff_delays_double():
         raise RateLimitError("x")
 
     with pytest.raises(LLMError):
-        call_with_retry(always_fail, max_retries=3, what="t", sleep=delays.append)
+        call_with_retry(
+            always_fail, max_retries=3, what="t", sleep=delays.append, jitter=lambda: 0.0
+        )
     assert delays == [1.0, 2.0, 4.0]
 
 

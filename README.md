@@ -67,12 +67,18 @@ extra LLM call; every follow-up turn makes one more. If that call fails, the ori
 the summaries in groups until one remains (see [ADR-0007](docs/adr/0007-summarization-strategy.md)).
 Tune it with `DOC_AGENT_SUMMARIZE_WORKERS` (default 2) and `DOC_AGENT_SUMMARIZE_GROUP_SIZE` (default 8).
 It costs about one LLM call per chunk, so on the Gemini free tier (15 requests per minute) a document of
-100 chunks takes many minutes and needs `DOC_AGENT_LLM_MAX_RETRIES=8` so rate-limit errors are waited out.
+100 chunks takes several minutes (about 6.5 minutes measured), but it completes with the default retry
+settings.
 
-**Errors.** Rate limits and temporary server errors are retried with exponential backoff
-(`DOC_AGENT_LLM_MAX_RETRIES`, default 3); authentication and configuration errors are not. If the model
-is still unavailable, the chatbot replies "The language model is unavailable. Please try again." instead
-of crashing. API key values are masked in error text.
+**Errors and retries.** There is exactly one retry layer: the provider adapters (chat and embeddings)
+wrap every call in `call_with_retry`; nodes add none. Rate limits (429) and temporary server errors
+(500, 502, 503, 504) are retried up to `DOC_AGENT_LLM_MAX_RETRIES` times (default 8, so at most 9
+attempts per call). A 429 waits for the delay the server asks for (a "retry in 5.4s" hint or a
+`Retry-After` header, at most 60 s per wait); other errors use exponential backoff (1 s, 2 s, 4 s, ...,
+also at most 60 s), both with a little jitter. Authentication, missing-key and other client errors are
+never retried. If the model is still unavailable, the chatbot replies "The language model is
+unavailable. Please try again." instead of crashing; after an outage starts, that can take a few
+minutes because the waits add up (at most 8 x 60 s per call). API key values are masked in error text.
 
 Development checks (all offline; no API key needed):
 

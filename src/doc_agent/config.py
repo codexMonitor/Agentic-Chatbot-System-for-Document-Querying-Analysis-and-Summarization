@@ -19,7 +19,7 @@ class Settings:
     chunk_overlap: int = 50
     retrieval_k: int = 4
     llm_timeout_s: float = 60.0
-    llm_max_retries: int = 3
+    llm_max_retries: int = 8
     summarize_workers: int = 2
     summarize_group_size: int = 8
     # Recent messages shown to the follow-up rewrite step; 0 turns rewriting off.

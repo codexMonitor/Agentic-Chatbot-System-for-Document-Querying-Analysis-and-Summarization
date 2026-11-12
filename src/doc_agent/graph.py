@@ -68,7 +68,6 @@ def build_graph(
             services.store,
             workers=settings.summarize_workers,
             group_size=settings.summarize_group_size,
-            max_retries=settings.llm_max_retries,
         ),
     )
     graph.add_edge(START, "rewrite")

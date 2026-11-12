@@ -3,9 +3,24 @@ import time
 
 import pytest
 
+from doc_agent.config import Settings
 from doc_agent.nodes.summarize import make_summarize
-from doc_agent.services.errors import LLMError
+from doc_agent.services.errors import LLMError, call_with_retry
+from doc_agent.services.llm import GeminiLLM
 from doc_agent.services.vectorstore import InMemoryVectorStore
+
+
+class RetryingLLM:
+    """Stands in for a provider adapter: it wraps each call in the same `call_with_retry`."""
+
+    def __init__(self, inner, max_retries: int = 3) -> None:
+        self.inner = inner
+        self.max_retries = max_retries
+
+    def invoke(self, prompt: str) -> str:
+        return call_with_retry(
+            lambda: self.inner.invoke(prompt), max_retries=self.max_retries, what="test provider"
+        )
 
 
 class CountingLLM:
@@ -89,10 +104,18 @@ def test_leftover_single_summary_is_carried_up_without_an_llm_call():
 
 def test_retryable_failure_in_one_worker_does_not_abort_the_summary(monkeypatch):
     monkeypatch.setattr("doc_agent.services.errors.time.sleep", lambda seconds: None)
-    llm = CountingLLM(fail_once_on="chunk-042")
-    result = summarize(llm, 100, workers=4, group_size=8)
-    assert llm.map_calls == 101  # chunk-042 was tried twice
+    inner = CountingLLM(fail_once_on="chunk-042")
+    result = summarize(RetryingLLM(inner), 100, workers=4, group_size=8)
+    assert inner.map_calls == 101  # chunk-042 was tried twice
     assert result["answer"].split() == [f"Schunk-{i:03d}" for i in range(100)]
+
+
+def test_the_node_adds_no_retry_layer_of_its_own():
+    inner = CountingLLM(fail_once_on="chunk-003")
+    result = summarize(inner, 10, workers=1)
+    assert (
+        "unavailable" in result["answer"]
+    )  # a node-level retry would have recovered from the one failure
 
 
 def test_non_retryable_error_becomes_a_friendly_answer_and_cancels_pending_work():
@@ -113,3 +136,78 @@ def test_non_retryable_error_becomes_a_friendly_answer_and_cancels_pending_work(
 def test_invalid_settings_are_rejected(workers, group_size):
     with pytest.raises(ValueError):
         make_summarize(CountingLLM(), make_store(1), workers=workers, group_size=group_size)
+
+
+_REAL_SLEEP = time.sleep
+CLOCK_SCALE = 200  # one real second is 200 simulated seconds
+
+
+class VirtualClock:
+    """Runs time `CLOCK_SCALE` times faster, so concurrent workers still see consistent time."""
+
+    def __init__(self) -> None:
+        self._start = time.monotonic()
+
+    def now(self) -> float:
+        return (time.monotonic() - self._start) * CLOCK_SCALE
+
+    def sleep(self, seconds: float) -> None:
+        _REAL_SLEEP(seconds / CLOCK_SCALE)
+
+
+class QuotaError(Exception):
+    code = 429
+
+    def __init__(self, wait_s: float) -> None:
+        super().__init__(f"429 RESOURCE_EXHAUSTED. Please retry in {wait_s:.2f}s.")
+        # The structured delay is rounded down, as the real API does.
+        self.details = {"error": {"details": [{"retryDelay": f"{int(wait_s)}s"}]}}
+
+
+class RateLimitedClient:
+    """Fake Gemini client: at most `limit` requests per sliding `window_s`, with a retry hint."""
+
+    def __init__(
+        self, clock: VirtualClock, inner, limit: int = 15, window_s: float = 60.0, latency_s=2.0
+    ):
+        self.models = self
+        self.rejected = 0
+        self.accepted = 0
+        self._clock, self._inner = clock, inner
+        self._limit, self._window_s, self._latency_s = limit, window_s, latency_s
+        self._sent: list[float] = []
+        self._lock = threading.Lock()
+
+    def generate_content(self, model, contents):
+        with self._lock:
+            now = self._clock.now()
+            self._sent = [t for t in self._sent if now - t < self._window_s]
+            if len(self._sent) >= self._limit:
+                self.rejected += 1
+                raise QuotaError(self._window_s - (now - self._sent[0]))
+            self._sent.append(now)
+            self.accepted += 1
+        # A real call takes a couple of seconds, which also gives a waiting worker its turn.
+        self._clock.sleep(self._latency_s)
+        return type("Response", (), {"text": self._inner.invoke(contents)})()
+
+
+def test_rate_limited_summarization_completes_with_default_settings(monkeypatch):
+    clock = VirtualClock()
+    monkeypatch.setattr("doc_agent.services.errors.time.sleep", clock.sleep)
+    settings = Settings(llm_model="m")  # default retries, workers and group size
+    inner = CountingLLM()
+    client = RateLimitedClient(clock, inner)
+    llm = GeminiLLM(settings, client=client)
+    node = make_summarize(
+        llm,
+        make_store(45),
+        workers=settings.summarize_workers,
+        group_size=settings.summarize_group_size,
+    )
+    result = node({"messages": []})
+    assert result["answer"].split() == [f"Schunk-{i:03d}" for i in range(45)]
+    assert inner.map_calls == 45
+    assert client.rejected > 0  # the limit really was hit and waited out
+    assert client.accepted == inner.map_calls + inner.reduce_calls
+    assert clock.now() >= 150  # 52 calls at 15 per minute cannot finish sooner

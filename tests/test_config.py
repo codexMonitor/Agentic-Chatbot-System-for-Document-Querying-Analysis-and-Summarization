@@ -35,7 +35,7 @@ def test_defaults():
     assert settings == Settings()
     assert settings.persist_dir == ".doc_agent_data"
     assert settings.llm_timeout_s == 60.0
-    assert settings.llm_max_retries == 3
+    assert settings.llm_max_retries == 8
     assert settings.summarize_workers == 2
     assert settings.summarize_group_size == 8
     assert settings.rewrite_history_turns == 4

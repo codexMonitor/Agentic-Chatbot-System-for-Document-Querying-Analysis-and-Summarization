@@ -1,4 +1,5 @@
 import logging
+import random
 
 import pytest
 
@@ -6,9 +7,10 @@ from doc_agent import cli
 from doc_agent.config import Settings
 from doc_agent.graph import build_graph, memory_checkpointer
 from doc_agent.nodes._utils import LLM_UNAVAILABLE
+from doc_agent.nodes.summarize import make_summarize
 from doc_agent.services import Services
 from doc_agent.services.embeddings import GeminiEmbedder
-from doc_agent.services.errors import LLMError, call_with_retry
+from doc_agent.services.errors import LLMError, call_with_retry, retry_after_from
 from doc_agent.services.llm import FakeLLM, GeminiLLM
 from doc_agent.services.vectorstore import InMemoryVectorStore
 
@@ -106,7 +108,123 @@ def test_embedder_uses_the_same_retry_budget():
     assert client.models.calls == 3
 
 
-def test_llm_error_is_retried_only_when_flagged_retryable():
+class QuotaError(HttpError):
+    """429 shaped like google-genai's `ClientError`: structured details plus a message hint."""
+
+    def __init__(self, retry_delay=None, message_hint=None) -> None:
+        text = "429 RESOURCE_EXHAUSTED."
+        if message_hint is not None:
+            text += f" Please retry in {message_hint}s."
+        super().__init__(429, text)
+        info = [] if retry_delay is None else [{"@type": "RetryInfo", "retryDelay": retry_delay}]
+        self.details = {"error": {"code": 429, "details": info}}
+
+
+def run_retry(errors, **options):
+    """Run `call_with_retry` over a function that raises `errors` in turn; return the sleeps."""
+    pending = list(errors)
+    sleeps: list[float] = []
+
+    def func():
+        if pending:
+            raise pending.pop(0)
+        return "ok"
+
+    options.setdefault("max_retries", len(errors))
+    options.setdefault("jitter", lambda: 0.0)
+    assert call_with_retry(func, what="t", sleep=sleeps.append, **options) == "ok"
+    return sleeps
+
+
+def test_a_persistently_failing_call_makes_max_retries_plus_one_attempts():
+    llm, client = make_llm([HttpError(503)], max_retries=3)
+    with pytest.raises(LLMError):
+        llm.invoke("hi")
+    assert client.models.calls == 4
+
+
+def test_summarize_does_not_square_the_attempts():
+    store = InMemoryVectorStore()
+    store.add("doc.txt", ["only chunk"])
+    llm, client = make_llm([HttpError(429)], max_retries=2)
+    result = make_summarize(llm, store, workers=1)({"messages": []})
+    assert result["answer"] == LLM_UNAVAILABLE
+    assert client.models.calls == 3
+
+
+def test_the_server_retry_delay_is_waited_out():
+    assert run_retry([QuotaError(retry_delay="7s")]) == [7.0]
+
+
+def test_the_precise_message_hint_beats_the_rounded_down_structured_one():
+    assert run_retry([QuotaError(retry_delay="5s", message_hint="5.49")]) == [5.49]
+
+
+def test_retry_after_header_is_read():
+    error = HttpError(429)
+    error.response = type("Response", (), {"headers": {"retry-after": "12"}})()
+    assert run_retry([error]) == [12.0]
+
+
+def test_server_delay_is_capped_and_never_busy_loops():
+    assert run_retry([QuotaError(retry_delay="500s")]) == [60.0]
+    assert run_retry([QuotaError(message_hint="0.05")]) == [1.0]
+
+
+def test_without_a_hint_the_backoff_doubles_and_is_capped():
+    assert run_retry([HttpError(503)] * 3) == [1.0, 2.0, 4.0]
+    assert run_retry([HttpError(503)] * 8, max_retries=8)[-2:] == [60.0, 60.0]
+
+
+def test_zero_or_unreadable_hints_fall_back_to_backoff():
+    assert run_retry([QuotaError(retry_delay="0s"), QuotaError(retry_delay="soon")]) == [1.0, 2.0]
+
+
+def test_jitter_stays_within_a_quarter_of_the_backoff():
+    sleeps = run_retry([HttpError(503)] * 3, jitter=lambda: 1.0)
+    assert sleeps == [1.25, 2.5, 5.0]
+    sleeps = run_retry([HttpError(503)] * 3, jitter=random.random)
+    assert all(base <= wait <= base * 1.25 for wait, base in zip(sleeps, [1, 2, 4], strict=True))
+
+
+def test_total_wait_for_one_call_is_bounded():
+    sleeps = run_retry([QuotaError(retry_delay="3600s")] * 3)
+    assert sum(sleeps) <= 3 * 60.0
+
+
+def test_the_real_sdk_error_shape_is_understood():
+    from google.genai import errors as genai_errors
+
+    # Body of the 429 the free tier returned in the first real summarization run.
+    body = {
+        "error": {
+            "code": 429,
+            "message": "You exceeded your current quota. Please retry in 5.490252276s.",
+            "status": "RESOURCE_EXHAUSTED",
+            "details": [
+                {"@type": "type.googleapis.com/google.rpc.Help"},
+                {"@type": "type.googleapis.com/google.rpc.RetryInfo", "retryDelay": "5s"},
+            ],
+        }
+    }
+    error = genai_errors.ClientError(429, body)
+    assert retry_after_from(error) == pytest.approx(5.490252276)
+    assert run_retry([error]) == [pytest.approx(5.490252276)]
+
+
+def test_the_final_error_carries_the_retry_hint():
+    llm, _ = make_llm([QuotaError(retry_delay="9s")], max_retries=0)
+    with pytest.raises(LLMError) as info:
+        llm.invoke("hi")
+    assert info.value.retry_after_s == 9.0 and info.value.retryable
+
+
+def test_hints_on_client_errors_are_ignored():
+    llm, client = make_llm([HttpError(401, "bad key. Please retry in 5s.")], max_retries=3)
+    with pytest.raises(LLMError) as info:
+        llm.invoke("hi")
+    assert client.models.calls == 1
+    assert info.value.retry_after_s is None
     calls = []
 
     def flaky():
