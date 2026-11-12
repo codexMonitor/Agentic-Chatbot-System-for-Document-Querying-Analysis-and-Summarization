@@ -52,3 +52,15 @@ of the text they cover. Remove repetition and keep the key facts.
 Write the summary in the same language as the partial summaries.
 ---
 {partials}"""
+
+REWRITE = """### TASK: rewrite
+Rewrite the new question as one standalone question that can be understood without the conversation.
+Use the conversation only to resolve references such as "it", "they" or "that".
+Keep the language of the new question and change nothing else.
+If the question is already standalone, repeat it unchanged.
+Reply with the question only.
+---
+Conversation:
+{conversation}
+
+New question: {question}"""

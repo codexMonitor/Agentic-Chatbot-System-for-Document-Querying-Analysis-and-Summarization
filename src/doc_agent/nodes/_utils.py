@@ -49,6 +49,11 @@ def last_user_text(state: AgentState) -> str:
     return content if isinstance(content, str) else str(content)
 
 
+def question_text(state: AgentState) -> str:
+    """The question to act on: the rewritten standalone one if present, else the last message."""
+    return state.get("standalone_question") or last_user_text(state)
+
+
 def reply(answer: str, **extra) -> dict:
     return {"messages": [AIMessage(content=answer)], "answer": answer, **extra}
 

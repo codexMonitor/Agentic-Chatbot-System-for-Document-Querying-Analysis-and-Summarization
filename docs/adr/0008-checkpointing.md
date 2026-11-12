@@ -29,5 +29,5 @@ without "unregistered type" warnings.
   but treat it like the documents themselves.
 - Only the allow-listed `Chunk` type is restored from checkpoints; adding another custom type to the
   state requires adding it to `_make_serde`.
-- The nodes still build their prompts from the latest user message only, so earlier turns are stored but
-  not yet used as context ([KI-002](../known-issues.md#ki-002-follow-up-questions-do-not-use-earlier-turns)).
+- The nodes build their prompts from a standalone version of the latest question, so the stored earlier
+  turns are used through the rewrite step (T2.7, see [KI-002](../known-issues.md)).

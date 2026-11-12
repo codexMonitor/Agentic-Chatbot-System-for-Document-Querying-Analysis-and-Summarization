@@ -54,9 +54,14 @@ Options:
 
 - `--thread <id>` (default `cli`): conversations are saved in SQLite
   (`DOC_AGENT_CHECKPOINT_DB`, default `.doc_agent_data\checkpoints.sqlite`). Restart with the same id to
-  continue that conversation; use another id for a fresh one. The history is restored, but follow-up
-  questions do not use earlier turns yet ([KI-002](docs/known-issues.md)).
+  continue that conversation; use another id for a fresh one.
 - `-v` / `--verbose`: log the routing decision and `node=<name> duration_ms=<n>` for every node to stderr.
+
+**Follow-up questions.** Before routing, a `rewrite` step turns a follow-up such as "How long are they?"
+into a standalone question ("How long are Scrum sprints?") using the last
+`DOC_AGENT_REWRITE_HISTORY_TURNS` messages (default 4; `0` turns it off). The router, question
+answering and analysis use the rewritten question. Cost: the first turn of a conversation makes no
+extra LLM call; every follow-up turn makes one more. If that call fails, the original question is used.
 
 **Summaries of long documents.** `Summarize the document` summarizes every chunk in parallel and merges
 the summaries in groups until one remains (see [ADR-0007](docs/adr/0007-summarization-strategy.md)).
@@ -112,12 +117,12 @@ python -c "import subprocess,sys; open('requirements.lock','w',encoding='utf-8',
 ```
 src/doc_agent/
   config.py       Settings + load_settings() (DOC_AGENT_* variables, optional .env)
-  state.py        AgentState (messages, intent, context, sources, answer)
+  state.py        AgentState (messages, standalone_question, intent, context, sources, answer)
   prompts.py      prompt templates ("### TASK: <name>", then "---", then payload)
-  graph.py        build_graph(services, settings, checkpointer=None): router -> qa | analysis | summarize;
-                  SQLite conversation memory and per-node timing logs
+  graph.py        build_graph(services, settings, checkpointer=None): rewrite -> router ->
+                  qa | analysis | summarize; SQLite conversation memory and per-node timing logs
   cli.py          command-line chat loop (--thread, --verbose)
-  nodes/          router.py qa.py analysis.py summarize.py _utils.py (timing, error guard)
+  nodes/          rewrite.py router.py qa.py analysis.py summarize.py _utils.py (timing, error guard)
   services/       base.py (Chunk + interfaces) llm.py embeddings.py vectorstore.py ingestion.py
                   errors.py (LLMError, call_with_retry) container.py
 tests/            offline tests (real-provider tests are opt-in); tests/data/intents.jsonl

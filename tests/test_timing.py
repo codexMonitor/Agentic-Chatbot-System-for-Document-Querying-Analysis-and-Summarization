@@ -27,9 +27,9 @@ def run_graph(question: str, caplog) -> tuple[dict, list[str]]:
 @pytest.mark.parametrize(
     ("question", "expected_nodes"),
     [
-        ("What is Scrum?", ["router", "qa"]),
-        ("Compare Scrum and Chroma", ["router", "analysis"]),
-        ("Summarize the document", ["router", "summarize"]),
+        ("What is Scrum?", ["rewrite", "router", "qa"]),
+        ("Compare Scrum and Chroma", ["rewrite", "router", "analysis"]),
+        ("Summarize the document", ["rewrite", "router", "summarize"]),
     ],
 )
 def test_one_timing_line_per_executed_node(caplog, question, expected_nodes):

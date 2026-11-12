@@ -11,6 +11,7 @@ from doc_agent.config import Settings
 from doc_agent.nodes._utils import timed
 from doc_agent.nodes.analysis import make_analysis
 from doc_agent.nodes.qa import make_qa
+from doc_agent.nodes.rewrite import make_rewrite
 from doc_agent.nodes.router import make_router
 from doc_agent.nodes.summarize import make_summarize
 from doc_agent.services.base import Chunk
@@ -56,6 +57,7 @@ def build_graph(
     def add_node(name: str, run) -> None:
         graph.add_node(name, timed(name, run))
 
+    add_node("rewrite", make_rewrite(services.llm, history_turns=settings.rewrite_history_turns))
     add_node("router", make_router(services.llm))
     add_node("qa", make_qa(services.llm, services.store, k=settings.retrieval_k))
     add_node("analysis", make_analysis(services.llm, services.store, k=settings.retrieval_k * 2))
@@ -69,7 +71,8 @@ def build_graph(
             max_retries=settings.llm_max_retries,
         ),
     )
-    graph.add_edge(START, "router")
+    graph.add_edge(START, "rewrite")
+    graph.add_edge("rewrite", "router")
     graph.add_conditional_edges(
         "router",
         route_by_intent,

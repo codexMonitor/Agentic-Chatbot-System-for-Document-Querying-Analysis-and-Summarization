@@ -22,6 +22,8 @@ class Settings:
     llm_max_retries: int = 3
     summarize_workers: int = 2
     summarize_group_size: int = 8
+    # Recent messages shown to the follow-up rewrite step; 0 turns rewriting off.
+    rewrite_history_turns: int = 4
 
     @property
     def checkpoint_path(self) -> Path:
@@ -51,5 +53,8 @@ def load_settings() -> Settings:
         summarize_workers=int(env.get("DOC_AGENT_SUMMARIZE_WORKERS", defaults.summarize_workers)),
         summarize_group_size=int(
             env.get("DOC_AGENT_SUMMARIZE_GROUP_SIZE", defaults.summarize_group_size)
+        ),
+        rewrite_history_turns=int(
+            env.get("DOC_AGENT_REWRITE_HISTORY_TURNS", defaults.rewrite_history_turns)
         ),
     )
