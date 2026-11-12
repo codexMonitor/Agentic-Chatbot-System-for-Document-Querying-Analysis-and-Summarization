@@ -12,4 +12,5 @@ class AgentState(TypedDict, total=False):
     intent: Intent
     context: list[Chunk]
     sources: list[dict]
+    standalone_question: str
     answer: str

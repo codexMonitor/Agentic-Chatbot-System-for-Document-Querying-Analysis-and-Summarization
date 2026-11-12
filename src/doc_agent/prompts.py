@@ -3,6 +3,20 @@ Classify the user's request. Reply with exactly one word: qa, analysis, or summa
 - qa: a specific question answerable from the documents.
 - analysis: comparing, extracting, or analysing information across the documents.
 - summarize: a summary or overview of the documents.
+
+Examples:
+Request: What is the notice period in the contract?
+Intent: qa
+Request: Ai là tác giả của báo cáo này?
+Intent: qa
+Request: Compare the two proposals and list the differences.
+Intent: analysis
+Request: Extract all deadlines mentioned in the documents.
+Intent: analysis
+Request: Give me a brief overview of the document.
+Intent: summarize
+Request: Tóm tắt tài liệu này.
+Intent: summarize
 ---
 {question}"""
 
@@ -28,10 +42,25 @@ Request: {question}"""
 
 SUMMARIZE_CHUNK = """### TASK: summarize_chunk
 Summarize the following text in one or two sentences.
+Write the summary in the same language as the text.
 ---
 {chunk}"""
 
 SUMMARIZE_REDUCE = """### TASK: summarize_reduce
-Combine these partial summaries into one coherent summary of the whole document.
+Combine these partial summaries, which are in document order, into one coherent summary
+of the text they cover. Remove repetition and keep the key facts.
+Write the summary in the same language as the partial summaries.
 ---
 {partials}"""
+
+REWRITE = """### TASK: rewrite
+Rewrite the new question as one standalone question that can be understood without the conversation.
+Use the conversation only to resolve references such as "it", "they" or "that".
+Keep the language of the new question and change nothing else.
+If the question is already standalone, repeat it unchanged.
+Reply with the question only.
+---
+Conversation:
+{conversation}
+
+New question: {question}"""

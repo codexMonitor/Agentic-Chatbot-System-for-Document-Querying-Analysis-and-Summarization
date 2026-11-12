@@ -26,6 +26,8 @@ class FakeLLM:
             if any(hint in text for hint in _ANALYSIS_HINTS):
                 return "analysis"
             return "qa"
+        if task == "rewrite":
+            return payload.rpartition("New question:")[2].strip()
         return f"[fake-llm:{task}] " + " ".join(payload.split())[:200]
 
 

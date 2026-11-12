@@ -14,6 +14,10 @@ ENV_VARS = [
     "DOC_AGENT_RETRIEVAL_K",
     "DOC_AGENT_LLM_TIMEOUT_S",
     "DOC_AGENT_LLM_MAX_RETRIES",
+    "DOC_AGENT_CHECKPOINT_DB",
+    "DOC_AGENT_SUMMARIZE_WORKERS",
+    "DOC_AGENT_SUMMARIZE_GROUP_SIZE",
+    "DOC_AGENT_REWRITE_HISTORY_TURNS",
 ]
 
 
@@ -31,7 +35,10 @@ def test_defaults():
     assert settings == Settings()
     assert settings.persist_dir == ".doc_agent_data"
     assert settings.llm_timeout_s == 60.0
-    assert settings.llm_max_retries == 3
+    assert settings.llm_max_retries == 8
+    assert settings.summarize_workers == 2
+    assert settings.summarize_group_size == 8
+    assert settings.rewrite_history_turns == 4
 
 
 def test_env_overrides_defaults(monkeypatch):
@@ -42,6 +49,9 @@ def test_env_overrides_defaults(monkeypatch):
     monkeypatch.setenv("DOC_AGENT_PERSIST_DIR", "store")
     monkeypatch.setenv("DOC_AGENT_LLM_TIMEOUT_S", "12.5")
     monkeypatch.setenv("DOC_AGENT_LLM_MAX_RETRIES", "5")
+    monkeypatch.setenv("DOC_AGENT_SUMMARIZE_WORKERS", "6")
+    monkeypatch.setenv("DOC_AGENT_SUMMARIZE_GROUP_SIZE", "4")
+    monkeypatch.setenv("DOC_AGENT_REWRITE_HISTORY_TURNS", "0")
     settings = load_settings()
     assert settings.llm_provider == "gemini"
     assert settings.llm_model == "some-model"
@@ -50,6 +60,9 @@ def test_env_overrides_defaults(monkeypatch):
     assert settings.persist_dir == "store"
     assert settings.llm_timeout_s == 12.5
     assert settings.llm_max_retries == 5
+    assert settings.summarize_workers == 6
+    assert settings.summarize_group_size == 4
+    assert settings.rewrite_history_turns == 0
 
 
 def test_dotenv_file_is_picked_up(tmp_path):

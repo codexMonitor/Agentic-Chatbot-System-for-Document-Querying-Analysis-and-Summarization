@@ -3,6 +3,7 @@
 | ID | Title | Status | Planned fix |
 |---|---|---|---|
 | [KI-001](#ki-001-sources-shown-for-unrelated-questions) | Sources shown for unrelated questions | Open | Phase 3 |
+| [KI-002](#ki-002-follow-up-questions-do-not-use-earlier-turns) | Follow-up questions do not use earlier turns | Resolved (T2.7) | Done |
 
 ## KI-001: Sources shown for unrelated questions
 
@@ -19,3 +20,16 @@ Chroma returns the nearest `k` chunks even for unrelated questions, so sources a
   can mislead the reader. The "I couldn't find anything relevant" reply is only reached on an empty store.
 - **Planned fix:** Phase 3: add a relevance threshold or retrieval grading, and measure the change with
   the evaluation harness (with and without the fix). Not fixed in Phase 1.
+
+## KI-002: Follow-up questions do not use earlier turns (resolved)
+
+After T2.3 the conversation was saved per `--thread` and restored after a restart, but the router and the
+nodes built their prompts from the latest user message only, so a follow-up such as "how long are they?"
+was searched with those literal words.
+
+- **Resolved by:** T2.7. A `rewrite` node runs first and turns the follow-up into a standalone question
+  (`standalone_question` in the state) that the router, `qa` and `analysis` use through `question_text`
+  in `src/doc_agent/nodes/_utils.py`. First turns cost no extra LLM call; each follow-up costs one. See
+  the README and `DOC_AGENT_REWRITE_HISTORY_TURNS`.
+- **Remaining limits:** the rewrite only sees the last `DOC_AGENT_REWRITE_HISTORY_TURNS` messages (each cut
+  to 600 characters), and `summarize` always covers the whole document, so it does not read the question.
