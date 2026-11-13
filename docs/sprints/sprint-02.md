@@ -90,6 +90,6 @@ To be filled in after the sprint review.
 
 ## Retrospective
 
-- What went well:
-- What to improve:
-- Actions for the next sprint:
+- What went well: Fix many bugs.
+- What to improve: I should learn to prompt and reduce API calls.
+- Actions for the next sprint: Nothing.
