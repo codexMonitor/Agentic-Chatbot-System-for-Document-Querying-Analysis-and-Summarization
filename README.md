@@ -39,6 +39,47 @@ stored under `DOC_AGENT_PERSIST_DIR` together with the name of the embedding mod
 incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. Free-tier
 Gemini data may be used by Google for training, so use only public or sample documents.
 
+## Browser UI
+
+Install the optional UI dependencies:
+
+```powershell
+pip install -e ".[ui]"
+```
+
+The UI shows conversation history backed by the API checkpointer. It sends documents and questions to
+the configured LLM provider; use public documents only. The HTTP client timeout defaults to 660
+seconds and must be longer than `DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it
+with `DOC_AGENT_UI_TIMEOUT_S` if you change the server's summarize budget.
+
+**API mode (two terminals).** In the first terminal, start FastAPI:
+
+```powershell
+.venv\Scripts\Activate.ps1
+uvicorn doc_agent.api.main:app --reload
+```
+
+In the second terminal, start Streamlit:
+
+```powershell
+.venv\Scripts\Activate.ps1
+$env:DOC_AGENT_MODE = "http"
+$env:DOC_AGENT_API_URL = "http://127.0.0.1:8000"
+streamlit run src\doc_agent\ui\app.py
+```
+
+**Embedded mode (one command, no separate API server).** Set the desired provider and persistence
+settings in `.env`, then run:
+
+```powershell
+.venv\Scripts\Activate.ps1
+$env:DOC_AGENT_MODE = "embedded"; streamlit run src\doc_agent\ui\app.py
+```
+
+The embedded UI calls `DocAgentApp` in-process and uses the same document, chat, and conversation
+history interface as HTTP mode. Set `DOC_AGENT_MODE=embedded` in `.env` to start it with only
+`streamlit run src\doc_agent\ui\app.py`.
+
 ## LangSmith tracing
 
 Tracing is off by default. To enable it, set `LANGSMITH_TRACING=true`, put your key in
@@ -147,7 +188,7 @@ pip install -r requirements.lock
 pip install -e . --no-deps
 ```
 
-To regenerate it, create a fresh venv, run `pip install -e ".[dev]"`, then:
+To regenerate it, create a fresh venv, run `pip install -e ".[dev,ui]"`, then:
 
 ```powershell
 python -c "import subprocess,sys; open('requirements.lock','w',encoding='utf-8',newline='\n').write(subprocess.run([sys.executable,'-m','pip','freeze','--exclude-editable'],capture_output=True,text=True,check=True).stdout)"
@@ -157,6 +198,7 @@ python -c "import subprocess,sys; open('requirements.lock','w',encoding='utf-8',
 
 ```
 src/doc_agent/
+  ui/app.py       Streamlit UI (HTTP or in-process client)
   config.py       Settings + load_settings() (DOC_AGENT_* variables, optional .env)
   state.py        AgentState (messages, standalone_question, intent, context, sources, answer)
   prompts.py      prompt templates ("### TASK: <name>", then "---", then payload)

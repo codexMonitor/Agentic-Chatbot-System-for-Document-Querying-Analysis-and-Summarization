@@ -21,6 +21,9 @@ ENV_VARS = [
     "DOC_AGENT_SUMMARIZE_WORKERS",
     "DOC_AGENT_SUMMARIZE_GROUP_SIZE",
     "DOC_AGENT_REWRITE_HISTORY_TURNS",
+    "DOC_AGENT_MODE",
+    "DOC_AGENT_API_URL",
+    "DOC_AGENT_UI_TIMEOUT_S",
 ]
 
 
@@ -45,6 +48,9 @@ def test_defaults():
     assert settings.summarize_workers == 2
     assert settings.summarize_group_size == 8
     assert settings.rewrite_history_turns == 4
+    assert settings.ui_mode == "http"
+    assert settings.api_url == "http://127.0.0.1:8000"
+    assert settings.ui_timeout_s == 660.0
 
 
 def test_env_overrides_defaults(monkeypatch):
@@ -61,6 +67,9 @@ def test_env_overrides_defaults(monkeypatch):
     monkeypatch.setenv("DOC_AGENT_SUMMARIZE_WORKERS", "6")
     monkeypatch.setenv("DOC_AGENT_SUMMARIZE_GROUP_SIZE", "4")
     monkeypatch.setenv("DOC_AGENT_REWRITE_HISTORY_TURNS", "0")
+    monkeypatch.setenv("DOC_AGENT_MODE", "embedded")
+    monkeypatch.setenv("DOC_AGENT_API_URL", "http://localhost:9000")
+    monkeypatch.setenv("DOC_AGENT_UI_TIMEOUT_S", "90")
     settings = load_settings()
     assert settings.llm_provider == "gemini"
     assert settings.llm_model == "some-model"
@@ -75,6 +84,14 @@ def test_env_overrides_defaults(monkeypatch):
     assert settings.summarize_workers == 6
     assert settings.summarize_group_size == 4
     assert settings.rewrite_history_turns == 0
+    assert settings.ui_mode == "embedded"
+    assert settings.api_url == "http://localhost:9000"
+    assert settings.ui_timeout_s == 90.0
+
+
+def test_ui_timeout_default_exceeds_custom_summarize_timeout(monkeypatch):
+    monkeypatch.setenv("DOC_AGENT_SUMMARIZE_TIMEOUT_S", "900")
+    assert load_settings().ui_timeout_s == 960.0
 
 
 def test_dotenv_file_is_picked_up(tmp_path):
