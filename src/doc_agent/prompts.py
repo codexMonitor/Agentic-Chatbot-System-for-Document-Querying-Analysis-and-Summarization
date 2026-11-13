@@ -44,7 +44,7 @@ QA = """### TASK: qa
 Answer the question using only the numbered context below.
 Cite every fact with the number of the chunk it came from, like [1] or [2].
 If the answer is not in the context, reply that it is not in the documents.
-Answer in the language of the question.
+Answer in the same language as the question.
 ---
 Context:
 {context}
@@ -53,6 +53,7 @@ Question: {question}"""
 
 ANALYSIS = """### TASK: analysis
 Analyse the document excerpts to fulfil the request using only the supplied evidence.
+Answer in the same language as the question.
 Return exactly these four sections, with the headings shown:
 Summary
 Key points
