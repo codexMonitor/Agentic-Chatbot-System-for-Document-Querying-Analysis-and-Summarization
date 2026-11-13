@@ -1,3 +1,5 @@
+import logging
+
 from langchain_core.messages import HumanMessage
 
 from doc_agent.nodes.analysis import make_analysis
@@ -67,3 +69,17 @@ def test_analysis_empty_store_returns_no_sources_without_calling_llm():
     assert result["answer"] == "No documents have been ingested yet."
     assert result["context"] == []
     assert result["sources"] == []
+
+
+def test_analysis_logs_invalid_citations_without_changing_the_answer(caplog):
+    answer = "The paper reports a spread [2]."
+    store = InMemoryVectorStore()
+    store.add("paper.pdf", ["The measured spread is 1.6 MeV."])
+
+    with caplog.at_level(logging.WARNING, logger="doc_agent.nodes._utils"):
+        result = make_analysis(FixedLLM(answer), store)(
+            {"messages": [HumanMessage(content="What is the spread?")]}
+        )
+
+    assert result["answer"] == answer
+    assert "node=analysis returned invalid citations=[2]" in caplog.text

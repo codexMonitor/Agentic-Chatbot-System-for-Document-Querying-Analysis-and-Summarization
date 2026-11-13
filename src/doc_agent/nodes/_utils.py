@@ -1,4 +1,5 @@
 import logging
+import re
 import time
 from collections.abc import Callable
 
@@ -11,6 +12,7 @@ from doc_agent.state import AgentState
 logger = logging.getLogger(__name__)
 
 LLM_UNAVAILABLE = "The language model is unavailable. Please try again."
+_CITATION_PATTERN = re.compile(r"\[(\d+)\]")
 
 
 def guard_llm_errors(name: str, fn: Callable[[AgentState], dict]) -> Callable[[AgentState], dict]:
@@ -52,6 +54,25 @@ def last_user_text(state: AgentState) -> str:
 def question_text(state: AgentState) -> str:
     """The question to act on: the rewritten standalone one if present, else the last message."""
     return state.get("standalone_question") or last_user_text(state)
+
+
+def check_citations(answer: str, n_sources: int) -> list[int]:
+    """Return each cited source number that falls outside the available 1-based source range."""
+    if n_sources < 0:
+        raise ValueError("n_sources must not be negative")
+    return [
+        number
+        for match in _CITATION_PATTERN.finditer(answer)
+        if not 1 <= (number := int(match.group(1))) <= n_sources
+    ]
+
+
+def warn_invalid_citations(answer: str, n_sources: int, node: str) -> None:
+    invalid = check_citations(answer, n_sources)
+    if invalid:
+        logger.warning(
+            "node=%s returned invalid citations=%s (source count=%d)", node, invalid, n_sources
+        )
 
 
 def reply(answer: str, **extra) -> dict:
