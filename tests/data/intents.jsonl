@@ -24,3 +24,10 @@
 {"question": "How do I use this assistant?", "intent": "chat"}
 {"question": "Xin chào!", "intent": "chat"}
 {"question": "Bạn có thể làm gì?", "intent": "chat"}
+{"question": "Thanks! Now summarize the report.", "intent": "summarize"}
+{"question": "Hi, what is Scrum?", "intent": "qa"}
+{"question": "Who are you?", "intent": "chat"}
+{"question": "How do I upload a document?", "intent": "chat"}
+{"question": "Cảm ơn bạn nhiều.", "intent": "chat"}
+{"question": "Great, that helps.", "intent": "chat"}
+{"question": "What is the capital of France?", "intent": "qa"}

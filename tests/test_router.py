@@ -1,6 +1,9 @@
+import io
 import json
 import logging
+import sys
 from collections import Counter
+from contextlib import redirect_stdout
 from pathlib import Path
 
 import pytest
@@ -39,10 +42,10 @@ def accuracy(llm, examples: list[dict]) -> float:
         if actual == expected:
             hits += 1
         else:
-            print(
-                f"misclassified: question={item['question']!r}, "
-                f"expected={expected}, actual={actual}"
-            )
+            question = repr(item["question"])
+            encoding = sys.stdout.encoding or "utf-8"
+            question = question.encode(encoding, errors="backslashreplace").decode(encoding)
+            print(f"misclassified: question={question}, expected={expected}, actual={actual}")
     return hits / len(examples)
 
 
@@ -69,6 +72,16 @@ def test_accuracy_reports_each_misclassification_without_repeating_calls(capsys)
     assert "question='Summarize this.', expected=summarize, actual=qa" in output
     assert "question='What is Scrum?', expected=qa, actual=analysis" in output
     assert "Hello!" not in output
+
+
+def test_accuracy_reports_unicode_on_legacy_console():
+    output = io.BytesIO()
+    stream = io.TextIOWrapper(output, encoding="cp1252")
+    with redirect_stdout(stream):
+        assert accuracy(FixedLLM("qa"), [{"question": "Xin chào bạn", "intent": "chat"}]) == 0
+    stream.flush()
+    assert b"expected=chat, actual=qa" in output.getvalue()
+    assert b"\\u1ea1" in output.getvalue()
 
 
 @pytest.mark.parametrize(
@@ -117,7 +130,7 @@ def test_router_prompt_keeps_task_header_and_separator():
 
 def test_intents_file_is_well_formed_and_balanced():
     examples = load_examples()
-    assert len(examples) == 26
+    assert len(examples) == 33
     assert all(set(item) == {"question", "intent"} for item in examples)
     counts = Counter(item["intent"] for item in examples)
     assert set(counts) == set(INTENTS)
