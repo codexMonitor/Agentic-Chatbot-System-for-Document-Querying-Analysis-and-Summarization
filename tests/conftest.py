@@ -6,6 +6,18 @@ from dotenv import dotenv_values
 from doc_agent.config import Settings
 
 
+def force_langsmith_tracing_off(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("LANGSMITH_TRACING", "false")
+    monkeypatch.delenv("LANGSMITH_TRACING_V2", raising=False)
+    monkeypatch.delenv("LANGCHAIN_TRACING_V2", raising=False)
+    monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
+
+
+@pytest.fixture(autouse=True)
+def disable_langsmith_tracing(monkeypatch):
+    force_langsmith_tracing_off(monkeypatch)
+
+
 def pytest_collection_modifyitems(config, items):
     if os.environ.get("DOC_AGENT_RUN_REAL") == "1":
         return

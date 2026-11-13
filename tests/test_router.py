@@ -1,6 +1,9 @@
+import io
 import json
 import logging
+import sys
 from collections import Counter
+from contextlib import redirect_stdout
 from pathlib import Path
 
 import pytest
@@ -11,7 +14,7 @@ from doc_agent.prompts import ROUTER
 from doc_agent.services.llm import FakeLLM, GeminiLLM
 
 INTENTS_FILE = Path(__file__).parent / "data" / "intents.jsonl"
-INTENTS = ("qa", "analysis", "summarize")
+INTENTS = ("chat", "qa", "analysis", "summarize")
 
 
 def load_examples() -> list[dict]:
@@ -32,8 +35,53 @@ def route(llm, question: str) -> str:
 
 
 def accuracy(llm, examples: list[dict]) -> float:
-    hits = sum(route(llm, item["question"]) == item["intent"] for item in examples)
+    hits = 0
+    for item in examples:
+        actual = route(llm, item["question"])
+        expected = item["intent"]
+        if actual == expected:
+            hits += 1
+        else:
+            question = repr(item["question"])
+            encoding = sys.stdout.encoding or "utf-8"
+            question = question.encode(encoding, errors="backslashreplace").decode(encoding)
+            print(f"misclassified: question={question}, expected={expected}, actual={actual}")
     return hits / len(examples)
+
+
+def test_accuracy_reports_each_misclassification_without_repeating_calls(capsys):
+    class ScriptedLLM:
+        def __init__(self):
+            self.answers = iter(["chat", "qa", "analysis"])
+            self.calls = 0
+
+        def invoke(self, prompt):
+            self.calls += 1
+            return next(self.answers)
+
+    llm = ScriptedLLM()
+    examples = [
+        {"question": "Hello!", "intent": "chat"},
+        {"question": "Summarize this.", "intent": "summarize"},
+        {"question": "What is Scrum?", "intent": "qa"},
+    ]
+
+    assert accuracy(llm, examples) == pytest.approx(1 / 3)
+    assert llm.calls == len(examples)
+    output = capsys.readouterr().out
+    assert "question='Summarize this.', expected=summarize, actual=qa" in output
+    assert "question='What is Scrum?', expected=qa, actual=analysis" in output
+    assert "Hello!" not in output
+
+
+def test_accuracy_reports_unicode_on_legacy_console():
+    output = io.BytesIO()
+    stream = io.TextIOWrapper(output, encoding="cp1252")
+    with redirect_stdout(stream):
+        assert accuracy(FixedLLM("qa"), [{"question": "Xin chào bạn", "intent": "chat"}]) == 0
+    stream.flush()
+    assert b"expected=chat, actual=qa" in output.getvalue()
+    assert b"\\u1ea1" in output.getvalue()
 
 
 @pytest.mark.parametrize(
@@ -80,9 +128,22 @@ def test_router_prompt_keeps_task_header_and_separator():
     assert "\n---\n{question}" in ROUTER
 
 
+def test_router_prompt_routes_factual_questions_to_qa_without_dataset_examples():
+    header = ROUTER.partition("\n---\n")[0]
+    assert "fact, name, number, setting, or detail goes to qa" in header
+    assert 'mentions\n"the system", "the model", or "the project"' in header
+    assert "When unsure between chat and anything else, choose qa." in header
+    prompt_examples = {
+        line.removeprefix("Request: ").strip()
+        for line in header.splitlines()
+        if line.startswith("Request: ")
+    }
+    assert prompt_examples.isdisjoint(item["question"] for item in load_examples())
+
+
 def test_intents_file_is_well_formed_and_balanced():
     examples = load_examples()
-    assert len(examples) == 20
+    assert len(examples) == 33
     assert all(set(item) == {"question", "intent"} for item in examples)
     counts = Counter(item["intent"] for item in examples)
     assert set(counts) == set(INTENTS)
@@ -95,6 +156,57 @@ def test_fake_llm_router_accuracy_on_intents_file():
     print(f"router accuracy (FakeLLM, offline): {score:.2f} on {len(examples)} examples")
     # The fake router only knows English keywords, so this is a regression floor, not a quality bar.
     assert score >= 0.75
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Hello!",
+        "Thanks for your help.",
+        "What can you do?",
+        "How do I use this assistant?",
+        "Xin chào!",
+        "Bạn có thể làm gì?",
+    ],
+)
+def test_fake_llm_routes_chat_examples(question):
+    assert route(FakeLLM(), question) == "chat"
+
+
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Good afternoon!",
+        "Thank you very much!",
+        "Cảm ơn rất nhiều!",
+        "Được rồi.",
+        "That's helpful.",
+        "Who are you?",
+        "How can I upload a file?",
+        "How do I start a conversation?",
+        "How do I ask a question?",
+        "How do I start?",
+        "How can I upload?",
+    ],
+)
+def test_fake_llm_recognizes_general_chat_patterns(question):
+    assert route(FakeLLM(), question) == "chat"
+
+
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        ("Hello, what model does this system use?", "qa"),
+        ("Thanks! Which version of the model is configured?", "qa"),
+        ("What is the name of the project?", "qa"),
+        ("How do I use the embedding model?", "qa"),
+        ("How do I use the system to identify the model?", "qa"),
+        ("Hi, summarize the contract.", "summarize"),
+        ("Thanks, compare the reports.", "analysis"),
+    ],
+)
+def test_fake_llm_does_not_confuse_factual_or_mixed_requests_with_chat(question, expected):
+    assert route(FakeLLM(), question) == expected
 
 
 @pytest.mark.real

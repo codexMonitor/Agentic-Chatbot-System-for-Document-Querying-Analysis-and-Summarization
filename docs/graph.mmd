@@ -1,0 +1,27 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	rewrite(rewrite)
+	router(router)
+	chat(chat)
+	qa(qa)
+	analysis(analysis)
+	summarize(summarize)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> rewrite;
+	rewrite --> router;
+	router -.-> analysis;
+	router -.-> chat;
+	router -.-> qa;
+	router -.-> summarize;
+	analysis --> __end__;
+	chat --> __end__;
+	qa --> __end__;
+	summarize --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

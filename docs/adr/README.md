@@ -13,5 +13,6 @@
 | [0008](0008-checkpointing.md) | Checkpointing and conversation memory | Accepted |
 | [0009](0009-nodes-may-use-error-helpers.md) | Nodes may use the provider-neutral error helpers | Accepted |
 | [0010](0010-follow-up-rewriting.md) | Follow-up question rewriting | Accepted |
+| [0011](0011-langsmith-tracing-and-studio.md) | LangSmith tracing and LangGraph Studio | Accepted |
 
 Open decisions are listed in [proposed.md](proposed.md).
