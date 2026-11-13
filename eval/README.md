@@ -11,3 +11,6 @@ The `source_docs` entries use the PDF basename expected from ingestion. Place
 `2611.13436v1.pdf` in `data\` for the documented run command, or pass the directory containing the
 PDF to `--docs`. Questions marked with `expected_intent: "summarize"` remain in the dataset but
 are skipped by default because summarization can be expensive.
+
+Install the optional judge dependency with `pip install -e ".[eval]"`. `--judge` uses the Ragas
+collections API and a configured real Gemini model; otherwise the judged metrics remain `null`.
