@@ -25,6 +25,11 @@ class InMemoryVectorStore:
         for position, text in enumerate(chunks):
             self._items.append((Chunk(text, source, position), _tokens(text)))
 
+    def delete(self, source: str) -> int:
+        before = len(self._items)
+        self._items = [item for item in self._items if item[0].source != source]
+        return before - len(self._items)
+
     def search(self, query: str, k: int = 4) -> list[Chunk]:
         query_tokens = _tokens(query)
         scored = [
@@ -37,6 +42,9 @@ class InMemoryVectorStore:
 
     def all_chunks(self) -> list[Chunk]:
         return [chunk for chunk, _ in self._items]
+
+    def sources(self) -> list[str]:
+        return sorted({chunk.source for chunk, _ in self._items})
 
 
 class ChromaVectorStore:
@@ -80,6 +88,12 @@ class ChromaVectorStore:
             metadatas=[{"source": source, "position": position} for position in range(len(chunks))],
         )
 
+    def delete(self, source: str) -> int:
+        ids = self._collection.get(where={"source": source}, include=["metadatas"])["ids"]
+        if ids:
+            self._collection.delete(ids=ids)
+        return len(ids)
+
     def search(self, query: str, k: int = 4) -> list[Chunk]:
         count = self._collection.count()
         if count == 0 or k <= 0:
@@ -101,3 +115,7 @@ class ChromaVectorStore:
             for text, meta in zip(result["documents"], result["metadatas"], strict=True)
         ]
         return sorted(chunks, key=lambda chunk: (chunk.source, chunk.position))
+
+    def sources(self) -> list[str]:
+        result = self._collection.get(include=["metadatas"])
+        return sorted({str(metadata["source"]) for metadata in result["metadatas"]})

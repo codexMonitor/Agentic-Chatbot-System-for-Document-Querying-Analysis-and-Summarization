@@ -47,6 +47,22 @@ def test_all_chunks_with_metadata(store):
     ]
 
 
+def test_sources_lists_unique_sources_in_sorted_order(store):
+    store.add("b.txt", CORPUS[:1])
+    store.add("a.txt", CORPUS[1:])
+    store.add("b.txt", CORPUS[2:])
+    assert store.sources() == ["a.txt", "b.txt"]
+
+
+def test_delete_removes_only_the_requested_source(store):
+    store.add("a.txt", CORPUS[:2])
+    store.add("b.txt", CORPUS[2:])
+    assert store.delete("a.txt") == 2
+    assert store.sources() == ["b.txt"]
+    assert store.all_chunks() == [Chunk(CORPUS[2], "b.txt", 0)]
+    assert store.delete("missing.txt") == 0
+
+
 def test_metadata_on_search_results(store):
     store.add("a.txt", CORPUS[:2])
     store.add("b.txt", CORPUS[2:])
