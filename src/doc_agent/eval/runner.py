@@ -12,7 +12,7 @@ from statistics import mean
 from typing import Any
 
 from doc_agent.config import Settings, load_settings
-from doc_agent.eval.metrics import calculate_metrics
+from doc_agent.eval.metrics import calculate_key_fact_metrics, calculate_metrics
 from doc_agent.graph import build_graph, memory_checkpointer
 from doc_agent.services import Services, build_services
 from doc_agent.services.base import LLMService
@@ -314,7 +314,73 @@ def _positive_int(value: str) -> int:
     return number
 
 
+def rescore_results(
+    results_path: Path,
+    dataset_path: Path,
+    out_path: Path,
+    *,
+    print_fn: Callable[[str], None] = print,
+) -> dict[str, Any]:
+    try:
+        output = json.loads(results_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError(f"{results_path}: invalid JSON: {error.msg}") from error
+    if not isinstance(output, dict) or not isinstance(output.get("results"), list):
+        raise ValueError(f"{results_path}: expected a results JSON object with a results list")
+    if not isinstance(output.get("metrics"), dict):
+        raise ValueError(f"{results_path}: expected a metrics object")
+
+    dataset = {row["id"]: row for row in _read_dataset(dataset_path)}
+    seen_ids: set[str] = set()
+    for result in output["results"]:
+        if not isinstance(result, dict) or not isinstance(result.get("id"), str):
+            raise ValueError(f"{results_path}: each result must have a string id")
+        result_id = result["id"]
+        if result_id in seen_ids:
+            raise ValueError(f"{results_path}: duplicate result id {result_id!r}")
+        seen_ids.add(result_id)
+        row = dataset.get(result_id)
+        if row is None:
+            raise ValueError(f"{results_path}: result id {result_id!r} is not in {dataset_path}")
+        if "key_facts" in row:
+            if not isinstance(result.get("answer"), str):
+                raise ValueError(f"{results_path}: result {result_id!r} has no answer string")
+            contexts = result.get("retrieved_contexts")
+            if not isinstance(contexts, list) or not all(
+                isinstance(context, str) for context in contexts
+            ):
+                raise ValueError(
+                    f"{results_path}: result {result_id!r} has no retrieved_contexts string list"
+                )
+            result["key_facts"] = row["key_facts"]
+        else:
+            result.pop("key_facts", None)
+            result.pop("missing_key_facts", None)
+
+    output["metrics"].update(calculate_key_fact_metrics(output["results"]))
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(output, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print_fn(f"Rescored {len(output['results'])} result rows without LLM calls: {out_path}")
+    return output
+
+
+def _rescore_main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(description="Recalculate key-fact metrics without LLM calls.")
+    parser.add_argument("--results", type=Path, required=True)
+    parser.add_argument("--dataset", type=Path, required=True)
+    parser.add_argument("--out", type=Path, required=True)
+    args = parser.parse_args(argv)
+    rescore_results(args.results, args.dataset, args.out)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
+    if argv is None:
+        import sys
+
+        argv = sys.argv[1:]
+    if argv and argv[0] == "rescore":
+        return _rescore_main(argv[1:])
     parser = argparse.ArgumentParser(description="Evaluate doc_agent on a JSONL question set.")
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--docs", type=Path, required=True, help="directory of documents to ingest")
