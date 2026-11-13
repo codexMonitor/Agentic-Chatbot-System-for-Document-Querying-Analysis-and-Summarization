@@ -9,8 +9,11 @@ from doc_agent.api.schemas import (
     ChatRequest,
     ChatResponse,
     DeleteDocumentResponse,
+    DeleteThreadResponse,
     DocumentListResponse,
     HealthResponse,
+    ThreadDetail,
+    ThreadListResponse,
     UploadDocumentResponse,
 )
 from doc_agent.app_service import (
@@ -77,6 +80,27 @@ def create_app(services: Services | None = None, settings: Settings | None = Non
     @app.post("/chat", response_model=ChatResponse)
     def chat(request: ChatRequest, service: Annotated[DocAgentApp, Depends(get_doc_agent)]) -> dict:
         return service.chat(request.thread_id, request.message)
+
+    @app.get("/threads", response_model=ThreadListResponse)
+    def list_threads(
+        service: Annotated[DocAgentApp, Depends(get_doc_agent)],
+    ) -> dict[str, list[dict[str, str | None]]]:
+        return {"threads": service.list_threads()}
+
+    @app.get("/threads/{thread_id}", response_model=ThreadDetail)
+    def get_thread(thread_id: str, service: Annotated[DocAgentApp, Depends(get_doc_agent)]) -> dict:
+        thread = service.get_thread(thread_id)
+        if thread is None:
+            raise HTTPException(status_code=404, detail="thread not found")
+        return thread
+
+    @app.delete("/threads/{thread_id}", response_model=DeleteThreadResponse)
+    def delete_thread(
+        thread_id: str, service: Annotated[DocAgentApp, Depends(get_doc_agent)]
+    ) -> dict[str, str | bool]:
+        if not service.delete_thread(thread_id):
+            raise HTTPException(status_code=404, detail="thread not found")
+        return {"thread_id": thread_id, "deleted": True}
 
     return app
 

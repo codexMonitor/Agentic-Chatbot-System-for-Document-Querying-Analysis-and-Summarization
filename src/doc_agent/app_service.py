@@ -1,6 +1,8 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+from langchain_core.messages import AIMessage, HumanMessage
+
 from doc_agent.config import Settings
 from doc_agent.graph import build_graph
 from doc_agent.services.base import LLMService
@@ -91,6 +93,50 @@ class DocAgentApp:
             "answer": result["answer"],
             "sources": result.get("sources") or [],
         }
+
+    def list_threads(self) -> list[dict[str, str | None]]:
+        thread_ids = {
+            checkpoint.config["configurable"]["thread_id"]
+            for checkpoint in self._graph.checkpointer.list(None)
+        }
+        threads = [
+            thread for thread_id in thread_ids if (thread := self.get_thread(thread_id)) is not None
+        ]
+        return sorted(threads, key=lambda thread: thread["updated_at"] or "", reverse=True)
+
+    def get_thread(self, thread_id: str) -> dict | None:
+        config = {"configurable": {"thread_id": thread_id}}
+        snapshot = self._graph.get_state(config)
+        messages = snapshot.values.get("messages") or []
+        if not messages:
+            return None
+
+        title = next(
+            (message.content for message in messages if isinstance(message, HumanMessage)), ""
+        )
+        serialized_messages = [
+            {
+                "role": "user" if isinstance(message, HumanMessage) else "assistant",
+                "content": message.content
+                if isinstance(message, (HumanMessage, AIMessage))
+                and isinstance(message.content, str)
+                else str(message.content),
+            }
+            for message in messages
+            if isinstance(message, (HumanMessage, AIMessage))
+        ]
+        return {
+            "thread_id": thread_id,
+            "title": title if isinstance(title, str) else str(title),
+            "updated_at": snapshot.created_at,
+            "messages": serialized_messages,
+        }
+
+    def delete_thread(self, thread_id: str) -> bool:
+        if self.get_thread(thread_id) is None:
+            return False
+        self._graph.checkpointer.delete_thread(thread_id)
+        return True
 
     def close(self) -> None:
         connection = getattr(self._graph.checkpointer, "conn", None)

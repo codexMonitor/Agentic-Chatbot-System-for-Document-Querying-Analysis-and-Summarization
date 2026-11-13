@@ -40,3 +40,27 @@ class ChatResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class ThreadSummary(BaseModel):
+    thread_id: str
+    title: str
+    updated_at: str | None
+
+
+class ThreadListResponse(BaseModel):
+    threads: list[ThreadSummary]
+
+
+class ThreadMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ThreadDetail(ThreadSummary):
+    messages: list[ThreadMessage]
+
+
+class DeleteThreadResponse(BaseModel):
+    thread_id: str
+    deleted: bool

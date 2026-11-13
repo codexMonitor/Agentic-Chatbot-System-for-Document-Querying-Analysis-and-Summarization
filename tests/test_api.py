@@ -77,6 +77,43 @@ def test_chat_rejects_blank_messages(tmp_path):
     assert response.status_code == 422
 
 
+def test_threads_list_reopen_survive_restart_and_delete(tmp_path):
+    settings = Settings(checkpoint_db=str(tmp_path / "persistent.sqlite"))
+    services = Services(llm=FakeLLM(), store=InMemoryVectorStore())
+    with TestClient(create_app(services, settings)) as client:
+        client.post("/chat", json={"thread_id": "thread-1", "message": "Hello"})
+        client.post("/chat", json={"thread_id": "thread-1", "message": "Thanks"})
+
+        listed = client.get("/threads")
+        assert listed.status_code == 200
+        assert len(listed.json()["threads"]) == 1
+        assert listed.json()["threads"][0]["thread_id"] == "thread-1"
+        assert listed.json()["threads"][0]["title"] == "Hello"
+        assert listed.json()["threads"][0]["updated_at"]
+
+        opened = client.get("/threads/thread-1")
+        assert opened.status_code == 200
+        assert [message["role"] for message in opened.json()["messages"]] == [
+            "user",
+            "assistant",
+            "user",
+            "assistant",
+        ]
+
+    restarted_services = Services(llm=FakeLLM(), store=InMemoryVectorStore())
+    with TestClient(create_app(restarted_services, settings)) as restarted:
+        reopened = restarted.get("/threads/thread-1")
+        assert reopened.status_code == 200
+        assert reopened.json()["title"] == "Hello"
+        assert reopened.json()["messages"] == opened.json()["messages"]
+
+        deleted = restarted.delete("/threads/thread-1")
+        assert deleted.status_code == 200
+        assert deleted.json() == {"thread_id": "thread-1", "deleted": True}
+        assert restarted.get("/threads/thread-1").status_code == 404
+        assert restarted.get("/threads").json() == {"threads": []}
+
+
 @pytest.mark.parametrize(
     ("question", "task"),
     [
