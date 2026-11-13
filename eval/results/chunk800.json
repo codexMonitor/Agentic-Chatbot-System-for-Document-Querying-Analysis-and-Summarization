@@ -1,0 +1,974 @@
+{
+  "schema_version": 1,
+  "settings": {
+    "chunk_size": 800,
+    "chunk_overlap": 50,
+    "k": 4,
+    "provider": "gemini",
+    "model": "gemini-3.5-flash-lite",
+    "vector_store": "chroma",
+    "docs": "eval\\docs"
+  },
+  "counts": {
+    "dataset_rows": 15,
+    "run": 14,
+    "skipped": 1,
+    "llm_calls_expected": 28,
+    "llm_calls_actual": 28
+  },
+  "metrics": {
+    "intent_accuracy": 0.8571428571428571,
+    "retrieval_hit_rate": 1.0,
+    "invalid_citation_rate": 0.0,
+    "avg_latency_ms": {
+      "per_question": 7613.12,
+      "per_node": {
+        "analysis": 2849.33,
+        "qa": 2311.0,
+        "rewrite": 0.0,
+        "router": 5165.36
+      }
+    },
+    "faithfulness": null,
+    "answer_relevance": null,
+    "context_relevance": null
+  },
+  "judge": {
+    "status": "disabled",
+    "reason": "--judge was not set"
+  },
+  "results": [
+    {
+      "id": "02",
+      "question": "What limitation of traditional bunch compressors does this work try to overcome?",
+      "reference_answer": "Traditional compressors force a trade-off: extreme temporal compression usually comes at the cost of a large deterioration of the transverse beam quality (for example due to coherent synchrotron radiation), because of the strong bending magnets required.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Traditional bunch compressors force a trade-off where extreme temporal compressions are typically achieved at the expense of a large deterioration of the transverse beam quality, often due to phenomena such as coherent synchrotron radiation (CSR) emission [1]. This work presents a technique to overcome this limitation [1].",
+      "retrieved_contexts": [
+        "ond science [13] will\nrequire an order of magnitude leap in electron\nbunch compression compared to the current state\nof the art. However, it has long been known that\ntraditional bunch compression techniques force\na trade-off: extreme temporal compressions are\nusually achieved at the expense of a large dete-\nrioration of the transverse beam quality due, for\ninstance, to coherent synchrotron radiation (CSR)\nemission [14–18]. Overcoming this limitation in\nthe face of ever-increasing demands on beam prop-\nerties for experiments has been recognized as one\nof the grand challenges facing accelerator physics\ntoday [4].\nIn this work, we present the first experi-\nmental demonstration of a novel and compact\ntemporal compression technique of an electron\nbunch using a scalable method that alleviates\nsu",
+        "rd.edu;\n†These authors contributed equally to this work.\nAbstract\nAccelerated particle beams are essential tools of modern science and technology with applications\nranging from medicine [1], to light sources [2], to high-energy physics [3]. Over time, as accelerator-\nbased experiments become more sophisticated and probe natural phenomena with greater temporal\nresolution, there is an increasing demand on beam parameters, in particular on bunch duration.\nExperiments have been proposed that require beams with 1–2 orders of magnitude shorter dura-\ntions than what is possible with current state-of-the-art technology. However, state-of-the-art bunch\ncompressors force a trade-off between how short an electron bunch can be made and how well its\ntransverse quality survives the strong bending magnet",
+        "blue lines show the energy distribution of the\nwitness bunch.\nelectric fields allow one to imprint strong longi-\ntudinal energy chirps on the beam. The large-\namplitude chirp is key to the extreme compres-\nsion mechanism for two reasons: first, the short-\nest achievable bunch duration for a given beam\nbrightness is inversely proportional to the energy\nchirp; second a large chirp allows one to com-\npress the electron beam without using strong\nbends [26], which typically spoil the electron beam\nquality in traditional compressor designs. In our\nexperiment, the chirped bunch is then compressed\nin a weakly bending, downstream magnetic chi-\ncane and its bunch duration is reduced by an\norder of magnitude. This fully compressed electron\nbunch is then utilized in the first demonstration\nof single-m",
+        "r-scale bunch com-\npressor using weakly bending dipoles with peak\nmagnetic field∼20 mT. The ratio between the\nwitness bunch length at the exit and entrance of\nthe bunch compressor (the compression factor) is\nset by the dipole magnetic fields and the distance\nbetween the dipoles and is parametrized by the\nlongitudinal dispersion coefficientR 56. Maximum\ncompression is achieved when the magnitude of\ntheR 56 is set to equal the inverse of the bunch\nchirp at the chicane entrance.\nFollowing the bunch compression chicane, the\ncompressed bunch is incident on an aluminum\nfoil, where it emits coherent transition radiation\n(CTR) whose total energy scales inversely with\nthe length of the compressed bunch. The CTR\nsignal is measured on a pyroelectric detector (see\nMethods for details). We performed a"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 5
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 1
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 8
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 15
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 5
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 1
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 8
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 15
+        }
+      ],
+      "latency_ms": 9228.57
+    },
+    {
+      "id": "03",
+      "question": "What are the driver and witness bunches, and what are their charges?",
+      "reference_answer": "Two electron bunches generated by the SPARC_LAB photoinjector. The driver has 500 pC and the witness 20 pC (both about 96 MeV, separated by about 1 ps; RMS durations about 500 fs and 30 fs).",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Based on the provided documents, the driver and witness bunches are two electron bunches generated by the SPARC LAB photoinjector (via photoemission of a copper cathode illuminated by two blue laser pulses) that are accelerated and longitudinally compressed [1, 4]. \n\nTheir respective bunch charges are:\n* Driver bunch charge: 500 pC [1]\n* Witness bunch charge: 20 pC [1]",
+      "retrieved_contexts": [
+        "r pulses [33]\nand are accelerated and longitudinally compressed\nusing the velocity-bunching technique [34, 35].\nThe resulting longitudinal phase space (LPS) at\nthe plasma entrance consists of a driver and wit-\nness bunch of energy∼96 MeV, a separation on\nthe order of 1 ps and bunch charges of 500 pC\nand 20 pC respectively (Fig. 2a). The driver and\nwitness bunch durations are estimated via RF\ndeflector measurements and beam dynamics sim-\nulations to be 500 fs and 30 fs RMS, respectively.\nThe two electron bunches are then focused to\nan RMS transverse spot size of∼50µm into a\n13-cm-long, high-voltage, discharge plasma capil-\nlary by means of a triplet of permanent magnet\nquadrupoles (PMQs) [36]. The entire setup is\ninstalled in a vacuum chamber directly connected\nwith a windowless, three-stag",
+        "ant shot-to-shot,\nany variation observed can be attributed to a\nchange in a bunching factor. For a Gaussian bunch\nwith longitudinal durationσ t, the bunching factor\ncan be written as:\nb (k) =e −k2c2σ2 t /2 (2)\nillustrating the pyro signal’s proportionality to\nthe bunch length of the witness beam.\nIn performing the CTR measurements, 50\nshots were taken at eachR 56 setting with both\nthe witness and driver bunches, and 50 additional\nshots were taken with only the driver bunch. For\neach setting, the outlying shots more than 2.5\nrobust standard deviations away from the median\nwere removed, and the mean driver-only signal\nwas subtracted from the mean witness-and-driver\nsignal. This difference, shifted and scaled to vary\nfrom 0 to 1, represents the CTR signal amplitude\ndue to the witness beam sho",
+        "r directly connected\nwith a windowless, three-stage differential pump-\ning system that ensures 10−8 mbar pressure in the\nRF linac while flowing gas into the capillary. This\nsolution allows beam transport through the cap-\nillary without encountering any window, thus not\ndegrading the beam emittance by multiple scat-\ntering [37]. The plasma density in the discharge\ncapillary is adjusted from 10 15 to 10 16 cm−3 by\nchanging the delay between the beginning of the\ndischarge and the arrival of the electron bunches.\nMore details are reported in Methods.\nAs the drive bunch propagates through the\nplasma, it excites a large-amplitude wakefield. The\nwitness bunch is placed in the accelerating phase\nof the wakefield where the amplitude of the lon-\ngitudinal wakefield increases linearly along the\nbunch",
+        "en utilized in the first demonstration\nof single-microbunch free electron lasing at optical\nfrequencies in a compact, meter-scale, downstream\nundulator [31]. In the following, we describe in\ndetail the beam-plasma interaction which gener-\nates the witness chirp, the temporal compression\nmechanism and the bunch lasing in an FEL. The\nexperimental results are further validated and\ncompared with results from numerical simulations.\nThe experimental setup is shown in Fig. 1. Two\nelectron bunches, hereinafter calleddriverand\nwitness, are generated by the SPARC LAB pho-\ntoinjector, which consists of an RF-gun followed\nby three accelerating sections [32]. The bunches\nare generated by the photoemission of a copper\ncathode illuminated by two blue laser pulses [33]\nand are accelerated and longitudinal"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 10
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 35
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 11
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 9
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 10
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 35
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 11
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 9
+        }
+      ],
+      "latency_ms": 5354.04
+    },
+    {
+      "id": "04",
+      "question": "How long is the plasma capillary and which gas is ionized to make the plasma?",
+      "reference_answer": "A 13-cm-long capillary (2 mm diameter hole); the plasma is produced by ionizing nitrogen gas.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Based on the provided documents, the plasma capillary is 13 cm long [3, 4], and the plasma is produced by ionizing nitrogen gas [3].",
+      "retrieved_contexts": [
+        "cated outside of the vacuum\nchamber, is used to fill the capillary with the gas.\nThe valve is opened for 2 ms and the discharge\ncurrent is applied immediately after its closure.\nThe discharge current is generated by a high-\nvoltage generator that provides 9 kV pulses and\na≈400 A current through the capillary. The\ncurrent is monitored with a Pearson current mon-\nitor. The plasma density is measured with a Stark\nbroadening-based diagnostics measuring the H β\nBalmer lines [43], and measuring the energy loss\nof trains of low-charge electron bunches resonantly\ndriving linear plasma wakefields [44, 45]. The sta-\nbilization of the discharge process and plasma\nformation is provided by pre-ionizing the gas with\na Quantel 532 nm CFR Ultra Nd:YAG laser,\nreducing the discharge timing-jitter to the ord",
+        "r directly connected\nwith a windowless, three-stage differential pump-\ning system that ensures 10−8 mbar pressure in the\nRF linac while flowing gas into the capillary. This\nsolution allows beam transport through the cap-\nillary without encountering any window, thus not\ndegrading the beam emittance by multiple scat-\ntering [37]. The plasma density in the discharge\ncapillary is adjusted from 10 15 to 10 16 cm−3 by\nchanging the delay between the beginning of the\ndischarge and the arrival of the electron bunches.\nMore details are reported in Methods.\nAs the drive bunch propagates through the\nplasma, it excites a large-amplitude wakefield. The\nwitness bunch is placed in the accelerating phase\nof the wakefield where the amplitude of the lon-\ngitudinal wakefield increases linearly along the\nbunch",
+        "by slightly accelerating the tail of\nthe beam while decelerating its head. This leads\nto a rotation of the beam longitudinal phase-space\nthat is simultaneously chirped and compressed.\nTo avoid uncontrolled emittance growth, solenoids\nembedded on the linear accelerator are turned on\nand provide the necessary additional focusing [42].\nUnlike other methods, the velocity-bunching does\nnot employ any mask or scraper in a dispersive\nsection, and therefore there is no loss of charge.\n2 Plasma source\nFor the experiment, a 13-cm-long capillary with\na 2 mm diameter hole has been used. The cap-\nillary is made in LEXAN polycarbonate and has\none inlet for the gas injection. The plasma is\nproduced by ionizing nitrogen gas. A high-speed\nsolenoid valve, located outside of the vacuum\nchamber, is used to fi",
+        "r pulses [33]\nand are accelerated and longitudinally compressed\nusing the velocity-bunching technique [34, 35].\nThe resulting longitudinal phase space (LPS) at\nthe plasma entrance consists of a driver and wit-\nness bunch of energy∼96 MeV, a separation on\nthe order of 1 ps and bunch charges of 500 pC\nand 20 pC respectively (Fig. 2a). The driver and\nwitness bunch durations are estimated via RF\ndeflector measurements and beam dynamics sim-\nulations to be 500 fs and 30 fs RMS, respectively.\nThe two electron bunches are then focused to\nan RMS transverse spot size of∼50µm into a\n13-cm-long, high-voltage, discharge plasma capil-\nlary by means of a triplet of permanent magnet\nquadrupoles (PMQs) [36]. The entire setup is\ninstalled in a vacuum chamber directly connected\nwith a windowless, three-stag"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 30
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 11
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 29
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 10
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 30
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 11
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 29
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 10
+        }
+      ],
+      "latency_ms": 2630.65
+    },
+    {
+      "id": "05",
+      "question": "At a plasma density of 2.7e15 cm^-3, what mean energy does the witness reach and what RMS energy spread does it acquire?",
+      "reference_answer": "Mean energy 106.1 MeV and a 1.6 +/- 0.2 MeV RMS projected energy spread.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "At a plasma density of $2.7 \\times 10^{15}\\text{ cm}^{-3}$, the witness is accelerated to a mean energy of 106.1 MeV and acquires a $1.6 \\pm 0.2\\text{ MeV}$ RMS projected energy spread [1].",
+      "retrieved_contexts": [
+        "ream of the bunch\ncompression chicane as a function of the chicane\nlongitudinal dispersion coefficientR 56. Experi-\nmental data is shown for plasma densities of 2.7×\n1015 cm−3 and 5.6×1015 cm−3. The error bars cor-\nrespond to the standard deviation. Solid blue line\nis a simulation of the CTR signal for an ensem-\nble of linearly chirped electron bunches. Note that\nR56 = 100µm corresponds to zero magnetic field\nin the chicane.\nbunch at two different plasma densities, with rep-\nresentative shots shown in Fig. 2b,c. At a plasma\ndensity of 2.7×10 15 cm−3, the witness is acceler-\nated to a mean energy of 106.1 MeV and acquires\na 1.6±0.2 MeV RMS projected energy spread. At\nthis density, the range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.03–2.86 MeV. At a plasma den",
+        "onsecutive shots is\n1.03–2.86 MeV. At a plasma density of 5.6×\n1015 cm−3, the witness is accelerated further up\nto 109.9 MeV, acquiring a 4.5±0.5 MeV RMS\nenergy spread. The range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.8–5.01 MeV.\nThe projected energy spread measured on the\nenergy spectrometer provides a measure of the\naverage chirp along the witness bunch. Based on\nmeasurements of the average and range of pro-\njected energy spreads and our simulations of the\nwitness bunch length at the plasma entrance,\nwe estimate the chirp acquired by the witness\nbunch at the plasma exit is in the range of\n∼0.12–0.56 MeV/µm. Such a large energy chirp\nis used to compress the bunch downstream of\nthe plasma with a small, meter-scale bunch com-\npressor using weakly bending di",
+        "The simula-\ntion curve shows the calculated CTR signal as\na function ofR 56 for linearly chirped Gaussian\nwitness bunch of 30 fs RMS duration at the chi-\ncane entrance. In order to capture shot-to-shot\njitter in our simulation of the multishot measure-\nment data, the calculated CTR signal at eachR 56\nvalue is the average of an ensemble of linearly\nchirped bunches with a Gaussian distribution cen-\ntered on 0.29 MeV/µm with an RMS width of\n0.04 MeV/µm fitted to the 2.7×10 15 cm−3 data.\nThe 2.7×10 15 cm−3 density data agrees well with\nthe simulated result.\nIn this experiment, control over the plasma\ndensity was utilized to exert control over the chirp\nof the electron beam. A more strongly chirped\nelectron beam will experience a higher correlated\nenergy spread, introducing higher order compre",
+        "tra of the beam produced by the\n2.7×10 15 cm−3 density plasma. At each mean\nelectron energy, the simulations consider beams\nentering the undulator with a range of chirps vary-\ning from 0.2 to 0.4 MeV/µm, which were chosen to\nmatch the expected chirps from pyroelectric detec-\ntor measurements shown in Fig. 3. Longitudinal\nspace charge effects and the undulator’s longitu-\ndinal dispersion cause the electron beam phase\nspace to evolve and the bunch to decompress as\nit transits the undulator. The peak current of the\nelectron bunch falls from 4.8 kA at the undula-\ntor entrance to 1.0 kA at the exit, while the RMS\nbunch length grows from 2.3 fs to 12 fs (Fig. 5a).\nThe averaged undulator radiation spectra sim-\nulated at the two different beam energies fit to\nthe measured data as shown in Fig. 4b."
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 14
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 14
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        }
+      ],
+      "latency_ms": 3087.13
+    },
+    {
+      "id": "06",
+      "question": "What energy chirp does the witness bunch acquire at the plasma exit?",
+      "reference_answer": "About 0.12 to 0.56 MeV/um.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Based on the provided documents, the energy chirp acquired by the witness bunch at the plasma exit is estimated to be in the range of approximately 0.12–0.56 MeV/µm [2, 3].",
+      "retrieved_contexts": [
+        "dinal wakefield increases linearly along the\nbunch. This results in the witness bunch being\naccelerated and simultaneously acquiring a large\nenergy chirp as it transits through the plasma.\nAs shown in Fig. 2, the large energy chirp man-\nifests as an increase in RMS energy spread of\nthe witness bunch in the electron energy spec-\ntrum. In the absence of beam loading and when\nthe plasma wakefield interaction is in the nonlin-\near regime [38], the energy chirp acquired by the\nwitness beam is proportional to the plasma den-\nsity [19]. We demonstrate the tunability of the\nenergy chirp by measuring the LPS of the witness\n3\n\nFig. 3:T ransition radiation.Amplitude of the\ncoherent transition radiation signal measured on\na pyroelectric detector downstream of the bunch\ncompression chicane as a functio",
+        "onsecutive shots is\n1.03–2.86 MeV. At a plasma density of 5.6×\n1015 cm−3, the witness is accelerated further up\nto 109.9 MeV, acquiring a 4.5±0.5 MeV RMS\nenergy spread. The range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.8–5.01 MeV.\nThe projected energy spread measured on the\nenergy spectrometer provides a measure of the\naverage chirp along the witness bunch. Based on\nmeasurements of the average and range of pro-\njected energy spreads and our simulations of the\nwitness bunch length at the plasma entrance,\nwe estimate the chirp acquired by the witness\nbunch at the plasma exit is in the range of\n∼0.12–0.56 MeV/µm. Such a large energy chirp\nis used to compress the bunch downstream of\nthe plasma with a small, meter-scale bunch com-\npressor using weakly bending di",
+        "ation for\nlasers, the wakefield of a preceding drive bunch\nimprints a large, tunable energy chirp (∼0.12–\n0.56 MeV/µm) on a witness bunch within a\n13-cm-long plasma discharge. Because the energy\nchirp is so large in magnitude, a weakly bending,\ncompact chicane (R 56 up to∼400µm) suffices\nto compress the bunch temporally by one order\nof magnitude. This compact, extreme compression\nwith weakly bending fields is poised to relax the\nlong-standing trade-off between bunch length and\ntransverse beam quality that stands as a funda-\nmental limitation towards pushing electron bunch\ncompression beyond the current state-of-the-art.\nThe resulting order femtosecond-duration wit-\nness bunch was used to drive single-microbunch\nfree electron lasing at 650 nm in a single meter-\nscale undulator, yielding a p",
+        "ream of the bunch\ncompression chicane as a function of the chicane\nlongitudinal dispersion coefficientR 56. Experi-\nmental data is shown for plasma densities of 2.7×\n1015 cm−3 and 5.6×1015 cm−3. The error bars cor-\nrespond to the standard deviation. Solid blue line\nis a simulation of the CTR signal for an ensem-\nble of linearly chirped electron bunches. Note that\nR56 = 100µm corresponds to zero magnetic field\nin the chicane.\nbunch at two different plasma densities, with rep-\nresentative shots shown in Fig. 2b,c. At a plasma\ndensity of 2.7×10 15 cm−3, the witness is acceler-\nated to a mean energy of 106.1 MeV and acquires\na 1.6±0.2 MeV RMS projected energy spread. At\nthis density, the range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.03–2.86 MeV. At a plasma den"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 12
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 14
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 25
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 12
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 14
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 25
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        }
+      ],
+      "latency_ms": 2344.69
+    },
+    {
+      "id": "07",
+      "question": "How much energy did the radiation pulse have, and how does it compare with the first beam-driven plasma-based free electron laser demonstration?",
+      "reference_answer": "7.6 +/- 1.3 nJ at the exit of a single 77-period undulator module, about four orders of magnitude more energetic than the first beam-driven plasma-based FEL demonstration at the same facility.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "analysis",
+      "answer": "Summary\nThe provided document excerpts describe a proof-of-principle experiment utilizing a plasma-compressed electron bunch to drive single-microbunch free electron lasing, resulting in the generation of an optical radiation pulse. The energy of this resulting pulse and its comparison to the first beam-driven, plasma-based free electron laser demonstration are detailed in the text.\n\nKey points\n- A radiation pulse energy of $7.6 \\pm 1.3\\text{ nJ}$ was produced at the exit of a single undulator module.\n- This pulse energy is approximately four orders of magnitude greater than the first demonstration of a beam-driven, plasma-based free electron laser (FEL) / SASE FEL at the same accelerator facility (SPARC).\n- The high pulse energy is attributed to a higher peak current and pre-bunching of the electron beam on the scale of the radiation wavelength.\n\nEvidence\n- The radiation pulse energy was measured by a photodiode at the exit of a single undulator module to be $7.6 \\pm 1.3\\text{ nJ}$ [3, 4].\n- This pulse energy result is about four orders of magnitude greater than the first demonstration of a beam-driven, plasma-based SASE FEL at SPARC using seven modules [1, 2, 3].\n- The higher pulse energy results from the higher peak current and pre-bunching of the beam on the scale of the radiation wavelength [1].\n\nOpen questions\n- What are the specific performance metrics and pulse energy values of the historical SPARC demonstration used for comparison, beyond the relative order-of-magnitude difference? (Evidence is missing from the excerpts regarding the exact numerical output of the initial demonstration).",
+      "retrieved_contexts": [
+        "r. For com-\nparison, this pulse energy result obtained from a\nsingle undulator module is about four orders of\nmagnitude greater than the first demonstration of\na beam-driven, plasma-based, self-amplified spon-\ntaneous emission (SASE) FEL at SPARC using\nseven modules and is a result of the higher peak\ncurrent and pre-bunching of the beam on the scale\nof the radiation wavelength [5].\nFig. 4b shows a comparison of the radiated\nspectrum with plasma on and without plasma.\nWithout plasma, the witness bunch does not\nacquire a significant energy chirp and is therefore\n5\n\nnot compressed by the chicane. The plasma-off\ndata was taken with the maximumR 56, 560µm,\nto allow for the most possible compression with\nthe small residual chirp present on the witness\nbunch following the velocity bunching and ac",
+        "on beams. We demonstrate the first application of\nthis plasma-compressed bunch, using it to drive single-microbunch free electron lasing at optical wave-\nlengths in a single, meter-scale undulator module, producing radiation pulses roughly four orders of\nmagnitude more energetic than the first beam-driven, plasma-based free electron laser demonstration\nat the same accelerator facility [5, 6].\n1\narXiv:2611.13436v1  [physics.acc-ph]  10 Nov 2026\n\nFig. 1:Experimental layout.Schematic longitudinal phase space of the driver and witness bunches\nat (a) the plasma entrance, (b) at the plasma exit, and (c) downstream of the compression chicane. The\ncompressed witness bunch radiates coherently in a downstream undulator tuned to a resonant wavelength\nof 650 nm comparable to the compressed witness bun",
+        "m in a single meter-\nscale undulator, yielding a pulse energy of 7.6±\n1.3 nJ, about four orders of magnitude above\nthe first beam-driven, plasma-based SASE FEL\ndemonstration [5]. This proof-of-principle exper-\niment establishes plasma-based compression as a\ncompact and scalable route towards few-cycle,\nwaveform-controlled FELs extending to the EUV\nand soft X-ray regimes [26, 27], with direct appli-\ncations in ultrafast quantum and materials sci-\nence, strong-field quantum electrodynamics and\nbeyond. Future experiments will explore scaling\nthese experimental results to shorter bunch dura-\ntions and shorter FEL wavelengths via plasma-\nbased injection [40, 41] as well as developing\nmulti-pulse multi-color schemes to enable photon\nbased ultrafast pump-probe dynamics studies.\n6\n\nMethods\n1 Gener",
+        "t undulator radiation as\na single microbunch, leading to the generation of\na 7.6±1.3 nJ photon pulse at the exit of a sin-\ngle undulator module of 77 periods in length, with\nthe pulse energy measured by a photodiode and\nFig. 5:FEL simulations.(a) Evolution of the\ncurrent profile through the undulator, as well as\nthe bunch length, for the 106 MeV, 0.3 MeV/µm\nbeam, shown at undulator periods 2, 10 and 50.\n(b) Simulated pulse energy along the undulator,\naveraged over multiple simulations (see Methods\nfor details). The pulse energy measured with the\nphotodiode, 7.6±1.3 nJ (mean±standard devia-\ntion over shots), is shown on the plot, with insets\nshowing the power profiles from simulation along\nthe undulator.\nthe spectrum by a grating spectrometer. For com-\nparison, this pulse energy result obta",
+        "r envelope phase stable, few-cycle, waveform-\ncontrolled extreme ultraviolet (EUV)/X-ray free\nelectron lasers (FELs) [25–28] and enabling break-\nthrough experiments in ultrafast quantum and\nmaterials science [10, 11], strong-field quantum\nelectrodynamics [9] and beyond.\nWhat enables extreme compression of the elec-\ntron beam in this experiment is the extremely\nlarge electric fields that can be sustained in a\nplasma accelerator (orders of magnitude larger\nthan with typical radiofrequency (RF) cavity-\nbased accelerators) [29, 30]. These ultra-strong\n2\n\nFig. 2:Electron energy spectra.Single-event\nenergy spectra of the driver and witness bunches\n(a) without plasma, (b) with plasma at density\n2.7×1015 cm−3, and (c) at density 5.6×1015 cm−3.\nThe blue lines show the energy distribution of the\nwit",
+        "gies fit to\nthe measured data as shown in Fig. 4b. Details\non the fitting procedure and results are provided\nin the Methods and in Extended Data Fig. 1.\nThe simulated FEL pulse energy curve in Fig. 5b\nrepresents the total energy in the spectrum pro-\nduced by taking the weighted sum of the spectra.\nThe simulated total pulse energy reaches 8.1 nJ at\nthe undulator exit, within the uncertainty of the\n7.6±1.3 nJ measured with a photodiode located\nat the undulator exit. The simulated RMS band-\nwidth of 8.2% is also in good agreement with the\nmeasured bandwidth of 8.9±0.3%.\nWe have demonstrated, for the first time,\ncompact and extreme compression of a relativis-\ntic electron bunch driven by a plasma wakefield.\nAnalogously to chirped pulse amplification for\nlasers, the wakefield of a preceding dri",
+        "ation for\nlasers, the wakefield of a preceding drive bunch\nimprints a large, tunable energy chirp (∼0.12–\n0.56 MeV/µm) on a witness bunch within a\n13-cm-long plasma discharge. Because the energy\nchirp is so large in magnitude, a weakly bending,\ncompact chicane (R 56 up to∼400µm) suffices\nto compress the bunch temporally by one order\nof magnitude. This compact, extreme compression\nwith weakly bending fields is poised to relax the\nlong-standing trade-off between bunch length and\ntransverse beam quality that stands as a funda-\nmental limitation towards pushing electron bunch\ncompression beyond the current state-of-the-art.\nThe resulting order femtosecond-duration wit-\nness bunch was used to drive single-microbunch\nfree electron lasing at 650 nm in a single meter-\nscale undulator, yielding a p",
+        "tra of the beam produced by the\n2.7×10 15 cm−3 density plasma. At each mean\nelectron energy, the simulations consider beams\nentering the undulator with a range of chirps vary-\ning from 0.2 to 0.4 MeV/µm, which were chosen to\nmatch the expected chirps from pyroelectric detec-\ntor measurements shown in Fig. 3. Longitudinal\nspace charge effects and the undulator’s longitu-\ndinal dispersion cause the electron beam phase\nspace to evolve and the bunch to decompress as\nit transits the undulator. The peak current of the\nelectron bunch falls from 4.8 kA at the undula-\ntor entrance to 1.0 kA at the exit, while the RMS\nbunch length grows from 2.3 fs to 12 fs (Fig. 5a).\nThe averaged undulator radiation spectra sim-\nulated at the two different beam energies fit to\nthe measured data as shown in Fig. 4b."
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 21
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 3
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 26
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 20
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 7
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 24
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 25
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 21
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 3
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 26
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 20
+        },
+        {
+          "n": 5,
+          "source": "2611.13436v1.pdf",
+          "position": 7
+        },
+        {
+          "n": 6,
+          "source": "2611.13436v1.pdf",
+          "position": 24
+        },
+        {
+          "n": 7,
+          "source": "2611.13436v1.pdf",
+          "position": 25
+        },
+        {
+          "n": 8,
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        }
+      ],
+      "latency_ms": 3819.52
+    },
+    {
+      "id": "08",
+      "question": "What are the undulator parameters and the resonant wavelength?",
+      "reference_answer": "A single planar module of 77 periods with period 28.18 mm. For K = 1.4 and a 106 MeV beam the resonant wavelength is about 650 nm.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Based on the provided documents, the undulator parameters and resonant wavelength are as follows:\n\n* **Undulator parameters:** \n  * The undulator is a single planar module consisting of 77 periods [3].\n  * The undulator period ($\\lambda_u$) is 28.18 mm [3].\n  * The $K$-value (undulator parameter $K$) is 1.4 (controlled by modifying the gap) [1, 3].\n* **Resonant wavelength:** \n  * For $K = 1.4$ and a beam energy of 106 MeV, the resonant wavelength is approximately 650 nm [1].",
+      "retrieved_contexts": [
+        "y charge,m e the electron mass andcthe\nspeed of light. ForK= 1.4 and a beam energy\nof 106 MeV, the resonant wavelength is approx-\nimately 650 nm. TheK-value was controlled by\nmodifying the gap, where a previously measured\nmap between the gap distance and measuredK\nvalue was employed.\nThe coherent radiation produced in the undu-\nlator was reflected out of the beamline with a\nthin aluminum target and sent into a single shot\ngrating spectrometer with a spectral bandwidth\nof 16 nm and tunable central wavelength. The\nfull spectrum was obtained as a multishot mea-\nsurement, averaging the individual spectra from\nmultiple shots over each 16 nm range while scan-\nning the spectrometer central wavelength. These\nspectra are depicted in Fig. 4.\nOnce individual shots were taken, they were\nprocessed by f",
+        "t undulator radiation as\na single microbunch, leading to the generation of\na 7.6±1.3 nJ photon pulse at the exit of a sin-\ngle undulator module of 77 periods in length, with\nthe pulse energy measured by a photodiode and\nFig. 5:FEL simulations.(a) Evolution of the\ncurrent profile through the undulator, as well as\nthe bunch length, for the 106 MeV, 0.3 MeV/µm\nbeam, shown at undulator periods 2, 10 and 50.\n(b) Simulated pulse energy along the undulator,\naveraged over multiple simulations (see Methods\nfor details). The pulse energy measured with the\nphotodiode, 7.6±1.3 nJ (mean±standard devia-\ntion over shots), is shown on the plot, with insets\nshowing the power profiles from simulation along\nthe undulator.\nthe spectrum by a grating spectrometer. For com-\nparison, this pulse energy result obta",
+        "e CTR signal amplitude\ndue to the witness beam shown in Fig. 3. The error\nbars give the shot-to-shot standard deviation of\nthe witness signal, found by subtracting the vari-\nance of the driver-only shots from the variance of\nthe witness-and-driver shots.\n6 Undulator radiation detection\nand analysis\nIn the experiment the compressed electron bunch\nis transported through an undulator magnet\nand generates coherent undulator radiation. The\nundulator is a single planar module of 77 periods,\nwith a resonant wavelength given by\nλr = λu 2γ2\n\u0012\n1 + K 2\n2\n\u0013\n,(3)\nwhereλ u = 28.18 mm is the undulator period,γis\nthe electron Lorentz factor andKis the undulator\nparameter, given by\nK= eB0λu\n2πmec ,(4)\nwithB 0 the peak on-axis magnetic field,ethe ele-\nmentary charge,m e the electron mass andcthe\nspeed of li",
+        "c exit to the\nundulator entrance is 5.75 m long and includes two\ntriplets of electromagnetic quadrupoles, used for\nmatching the beam parameters at the exit of the\nlinac to those of the undulator beamline. The lay-\nout of the transfer line has been realized in order\nto perform a small orbit in a magnetic chicane.\nThe maximum horizontal deviation of the electron\nbeam orbit with the chicane magnets turned to\nmaximum field strength can reach 12 mm at the\ncenter of the chicane. The chicane consists of four\nbending magnets, which allow for having beam\ndisplacement and no angle at the desired injec-\ntion location. The chicane allows to realize bumps\nfor electron energies up to 200 MeV and uses the\nspectrometer magnet (operating with small cur-\nrents) as the first bump corrector. The following\nthr"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 37
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 20
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 36
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 33
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 37
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 20
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 36
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 33
+        }
+      ],
+      "latency_ms": 2385.0
+    },
+    {
+      "id": "09",
+      "question": "How is bunch compression detected after the chicane, and how does the signal behave as the dispersion R56 increases?",
+      "reference_answer": "Coherent transition radiation from an aluminum foil is measured with a pyroelectric detector. The signal rises with R56, reaches a maximum, then decreases, consistent with the bunch compressing to a minimum length and then lengthening.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "After the bunch compression chicane, the compressed bunch is incident on an aluminum foil where it emits coherent transition radiation (CTR), whose total energy scales inversely with the length of the compressed bunch [2]. This CTR signal is measured on a pyroelectric detector [1, 2]. \n\nAs the longitudinal dispersion $R_{56}$ increases, the CTR signal initially rises, reaches a maximum value, and then decreases [1].",
+      "retrieved_contexts": [
+        "etector (see\nMethods for details). We performed a scan of the\nchicane longitudinal dispersion while measuring\nthe total CTR energy to determine theR 56 result-\ning in maximum compression, and the results are\nshown in Fig. 3. Note that the propagation of the\nbeam through free space from the plasma exit to\nthe chicane entrance adds 100µm to theR 56, such\nthat even when the chicane is fully turned off, the\nminimalR 56 is 100µm.\nIn Fig. 3, for both 2.7×10 15 cm−3 and 5.6×\n1015 cm−3 densities, we observe that the signal\nrises initially asR 56 increases, finds a maximum\nvalue, and then decreases. This is consistent with\nthe witness electron bunch compressing, reaching\na minimum bunch length and then lengthening\nas it goes beyond full compression. The simula-\ntion curve shows the calculated CTR s",
+        "r-scale bunch com-\npressor using weakly bending dipoles with peak\nmagnetic field∼20 mT. The ratio between the\nwitness bunch length at the exit and entrance of\nthe bunch compressor (the compression factor) is\nset by the dipole magnetic fields and the distance\nbetween the dipoles and is parametrized by the\nlongitudinal dispersion coefficientR 56. Maximum\ncompression is achieved when the magnitude of\ntheR 56 is set to equal the inverse of the bunch\nchirp at the chicane entrance.\nFollowing the bunch compression chicane, the\ncompressed bunch is incident on an aluminum\nfoil, where it emits coherent transition radiation\n(CTR) whose total energy scales inversely with\nthe length of the compressed bunch. The CTR\nsignal is measured on a pyroelectric detector (see\nMethods for details). We performed a",
+        "ream of the bunch\ncompression chicane as a function of the chicane\nlongitudinal dispersion coefficientR 56. Experi-\nmental data is shown for plasma densities of 2.7×\n1015 cm−3 and 5.6×1015 cm−3. The error bars cor-\nrespond to the standard deviation. Solid blue line\nis a simulation of the CTR signal for an ensem-\nble of linearly chirped electron bunches. Note that\nR56 = 100µm corresponds to zero magnetic field\nin the chicane.\nbunch at two different plasma densities, with rep-\nresentative shots shown in Fig. 2b,c. At a plasma\ndensity of 2.7×10 15 cm−3, the witness is acceler-\nated to a mean energy of 106.1 MeV and acquires\na 1.6±0.2 MeV RMS projected energy spread. At\nthis density, the range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.03–2.86 MeV. At a plasma den",
+        "The simula-\ntion curve shows the calculated CTR signal as\na function ofR 56 for linearly chirped Gaussian\nwitness bunch of 30 fs RMS duration at the chi-\ncane entrance. In order to capture shot-to-shot\njitter in our simulation of the multishot measure-\nment data, the calculated CTR signal at eachR 56\nvalue is the average of an ensemble of linearly\nchirped bunches with a Gaussian distribution cen-\ntered on 0.29 MeV/µm with an RMS width of\n0.04 MeV/µm fitted to the 2.7×10 15 cm−3 data.\nThe 2.7×10 15 cm−3 density data agrees well with\nthe simulated result.\nIn this experiment, control over the plasma\ndensity was utilized to exert control over the chirp\nof the electron beam. A more strongly chirped\nelectron beam will experience a higher correlated\nenergy spread, introducing higher order compre"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 16
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 15
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 16
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 15
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        }
+      ],
+      "latency_ms": 2678.13
+    },
+    {
+      "id": "10",
+      "question": "What happens to the undulator radiation when the plasma is off?",
+      "reference_answer": "The witness acquires no significant chirp and is not compressed, so the undulator radiation stays below about 7% of the peak signal with plasma, and its spectrum is centered around 750 nm instead of about 650-665 nm.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "When the plasma is off, the measured undulator radiation spectrum stays below approximately 7% of the peak signal obtained with the plasma on [1]. Additionally, without plasma, the witness bunch does not acquire a significant energy chirp and is therefore not compressed by the chicane [3]. Furthermore, the plasma-off spectrum is centered around 750 nm because the lower energy witness bunch red-shifts the FEL resonance condition compared to the plasma-on case [1].",
+      "retrieved_contexts": [
+        "tness\nbunch following the velocity bunching and accel-\neration in the linac sections. The measured undu-\nlator radiation spectrum with plasma-off stays\nbelow∼7% of the peak signal with plasma. Note\nthat the plasma-off spectrum is centered around\n750 nm because the lower energy witness bunch\nred-shifts the FEL resonance condition relative to\nthe plasma-on case.\nTo interpret the measured undulator radia-\ntion spectra, we simulated the single microbunch\nfree electron lasing interaction with the simula-\ntion code PUFFIN [39]. The simulation results\nare shown in Fig. 5 and described further in the\nMethods. Simulations were performed using elec-\ntron beams centered at mean energies of 106 MeV\nand 109 MeV to match the range of measured\nenergy spectra of the beam produced by the\n2.7×10 15 cm−3 den",
+        "tra of the beam produced by the\n2.7×10 15 cm−3 density plasma. At each mean\nelectron energy, the simulations consider beams\nentering the undulator with a range of chirps vary-\ning from 0.2 to 0.4 MeV/µm, which were chosen to\nmatch the expected chirps from pyroelectric detec-\ntor measurements shown in Fig. 3. Longitudinal\nspace charge effects and the undulator’s longitu-\ndinal dispersion cause the electron beam phase\nspace to evolve and the bunch to decompress as\nit transits the undulator. The peak current of the\nelectron bunch falls from 4.8 kA at the undula-\ntor entrance to 1.0 kA at the exit, while the RMS\nbunch length grows from 2.3 fs to 12 fs (Fig. 5a).\nThe averaged undulator radiation spectra sim-\nulated at the two different beam energies fit to\nthe measured data as shown in Fig. 4b.",
+        "r. For com-\nparison, this pulse energy result obtained from a\nsingle undulator module is about four orders of\nmagnitude greater than the first demonstration of\na beam-driven, plasma-based, self-amplified spon-\ntaneous emission (SASE) FEL at SPARC using\nseven modules and is a result of the higher peak\ncurrent and pre-bunching of the beam on the scale\nof the radiation wavelength [5].\nFig. 4b shows a comparison of the radiated\nspectrum with plasma on and without plasma.\nWithout plasma, the witness bunch does not\nacquire a significant energy chirp and is therefore\n5\n\nnot compressed by the chicane. The plasma-off\ndata was taken with the maximumR 56, 560µm,\nto allow for the most possible compression with\nthe small residual chirp present on the witness\nbunch following the velocity bunching and ac",
+        "iation\nspectrum taken with no plasma.\nvalues where peak compression is achieved [19].\nThis behavior is observed in the 5.6×10 15 cm−3\ndensity case shown in Fig. 3, which exhibits a peak\nsignal amplitude over a broader range ofR 56 val-\nues. Based on our estimates of the energy chirp\nand slice energy spread of the witness beam and\nour beam dynamics simulations matching the data\nin Fig. 3, we expect the compression factor to\nbe one order of magnitude and the final witness\nbunch duration to be fs-scale at the exit of the\nbunch compressor.\nThe fully compressedO(fs) duration electron\nbeam is then sent into an undulator whose res-\nonant wavelength is tuned to 650 nm and is\ncomparable to the electron bunch length. The elec-\ntron beam emits coherent undulator radiation as\na single microbunch, lead"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 22
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 21
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 19
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 22
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 21
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 19
+        }
+      ],
+      "latency_ms": 2300.39
+    },
+    {
+      "id": "11",
+      "question": "How do the simulations say the peak current and RMS bunch length change along the undulator?",
+      "reference_answer": "The peak current falls from 4.8 kA at the undulator entrance to 1.0 kA at the exit, while the RMS bunch length grows from 2.3 fs to 12 fs.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "analysis",
+      "answer": "Summary\nThe provided document excerpts describe free-electron laser (FEL) and plasma wakefield simulations tracking how electron beam properties evolve as they transit an undulator. Specifically, longitudinal space charge effects and the undulator's longitudinal dispersion cause the electron beam bunch to decompress.\n\nKey points\n- The peak current of the electron bunch decreases significantly between the entrance and exit of the undulator [1].\n- The RMS bunch length increases substantially during the transit through the undulator [1].\n\nEvidence\n- The peak current of the electron bunch falls from 4.8 kA at the undulator entrance to 1.0 kA at the exit [1].\n- The RMS bunch length grows from 2.3 fs to 12 fs [1].\n\nOpen questions\n- The excerpts do not specify the exact mechanisms or equations driving the precise rate of current drop and bunch length growth beyond mentioning longitudinal space charge effects and longitudinal dispersion [1].",
+      "retrieved_contexts": [
+        "tra of the beam produced by the\n2.7×10 15 cm−3 density plasma. At each mean\nelectron energy, the simulations consider beams\nentering the undulator with a range of chirps vary-\ning from 0.2 to 0.4 MeV/µm, which were chosen to\nmatch the expected chirps from pyroelectric detec-\ntor measurements shown in Fig. 3. Longitudinal\nspace charge effects and the undulator’s longitu-\ndinal dispersion cause the electron beam phase\nspace to evolve and the bunch to decompress as\nit transits the undulator. The peak current of the\nelectron bunch falls from 4.8 kA at the undula-\ntor entrance to 1.0 kA at the exit, while the RMS\nbunch length grows from 2.3 fs to 12 fs (Fig. 5a).\nThe averaged undulator radiation spectra sim-\nulated at the two different beam energies fit to\nthe measured data as shown in Fig. 4b.",
+        "idered in this\nwork, the simulations use a custom module that\nsimulates the effects of longitudinal space charge\n(LSC) which introduce non-negligible dynamics\nand affect of the beam distribution during its\ntraversal in the undulator primarily through the\ngeneration of energy chirps in the longitudinal\nphase space [27].\nThe FEL simulations consider 20 pC charge\nGaussian beams at energies of 106 and 109 MeV\nwith an RMS bunch duration of 30 fs at the exit of\nthe plasma and a 0.1% uncorrelated energy spread\nwith linear energy chirps ranging between 0.20\nand 0.40 MeV/µm. The beams were propagated\nthrough free space with anR 56 value of 100µm,\ncompressing them through a chicane with anR 56\nvalue of 250µm, and then transporting those\nvariously compressed beams into aK= 1.4, 77-\nperiod undulator s",
+        "t undulator radiation as\na single microbunch, leading to the generation of\na 7.6±1.3 nJ photon pulse at the exit of a sin-\ngle undulator module of 77 periods in length, with\nthe pulse energy measured by a photodiode and\nFig. 5:FEL simulations.(a) Evolution of the\ncurrent profile through the undulator, as well as\nthe bunch length, for the 106 MeV, 0.3 MeV/µm\nbeam, shown at undulator periods 2, 10 and 50.\n(b) Simulated pulse energy along the undulator,\naveraged over multiple simulations (see Methods\nfor details). The pulse energy measured with the\nphotodiode, 7.6±1.3 nJ (mean±standard devia-\ntion over shots), is shown on the plot, with insets\nshowing the power profiles from simulation along\nthe undulator.\nthe spectrum by a grating spectrometer. For com-\nparison, this pulse energy result obta",
+        "pressed beams into aK= 1.4, 77-\nperiod undulator simulated with PUFFIN. This\napproach was employed to mimic the shot-to-shot\nvariation in chirp and mean energy of the electron\nbunches encountered in the experiment. At each\nchirp, the simulated spectra of the two beam ener-\ngies, integrated over the full transverse simulation\ngrid, were averaged to represent a 106±3 MeV\nbeam. The weights of the five chirps were then\nfound by a non-negative least-squares fit to the\nmeasured spectrum. In Extended Data Fig. 1,\nthe different colors in the fill represent the con-\ntributions of the different chirps, with the red\nline representing the sum total simulated spec-\ntrum. Fig. 5b shows the pulse energy along the\nundulator averaged with the same weights, which\nreaches 8.1 nJ at the undulator exit, compar",
+        "which\nreaches 8.1 nJ at the undulator exit, compared\nwith the 7.6±1.3 nJ experimentally measured with\na photodiode located at the undulator exit.\nThe pyro signal was simulated by generating\na Gaussian witness beam with a bunch length\nof 10µm, 20 pC, an energy of 106 MeV, and\nan uncorrelated energy spread of 0.1% with a\nlinear chirp varying from 0.2 to 0.4 MeV/µm.\nThe beam was then compressed through the chi-\ncane, modeled as a longitudinal mapz f =z i +\nR56δE +T 566δ2 E, and the coherent transition radi-\nation emitted by the compressed beam at the\naluminum foil was calculated. This was performed\nfor a range of chirps and the signal was averaged\nover a Gaussian distribution of chirps where the\nmean and width were fit to the data, giving a\nmean chirp of 0.29 MeV/µm and an RMS width\nof 0.04 M",
+        "The simula-\ntion curve shows the calculated CTR signal as\na function ofR 56 for linearly chirped Gaussian\nwitness bunch of 30 fs RMS duration at the chi-\ncane entrance. In order to capture shot-to-shot\njitter in our simulation of the multishot measure-\nment data, the calculated CTR signal at eachR 56\nvalue is the average of an ensemble of linearly\nchirped bunches with a Gaussian distribution cen-\ntered on 0.29 MeV/µm with an RMS width of\n0.04 MeV/µm fitted to the 2.7×10 15 cm−3 data.\nThe 2.7×10 15 cm−3 density data agrees well with\nthe simulated result.\nIn this experiment, control over the plasma\ndensity was utilized to exert control over the chirp\nof the electron beam. A more strongly chirped\nelectron beam will experience a higher correlated\nenergy spread, introducing higher order compre",
+        "tness\nbunch following the velocity bunching and accel-\neration in the linac sections. The measured undu-\nlator radiation spectrum with plasma-off stays\nbelow∼7% of the peak signal with plasma. Note\nthat the plasma-off spectrum is centered around\n750 nm because the lower energy witness bunch\nred-shifts the FEL resonance condition relative to\nthe plasma-on case.\nTo interpret the measured undulator radia-\ntion spectra, we simulated the single microbunch\nfree electron lasing interaction with the simula-\ntion code PUFFIN [39]. The simulation results\nare shown in Fig. 5 and described further in the\nMethods. Simulations were performed using elec-\ntron beams centered at mean energies of 106 MeV\nand 109 MeV to match the range of measured\nenergy spectra of the beam produced by the\n2.7×10 15 cm−3 den",
+        "gies fit to\nthe measured data as shown in Fig. 4b. Details\non the fitting procedure and results are provided\nin the Methods and in Extended Data Fig. 1.\nThe simulated FEL pulse energy curve in Fig. 5b\nrepresents the total energy in the spectrum pro-\nduced by taking the weighted sum of the spectra.\nThe simulated total pulse energy reaches 8.1 nJ at\nthe undulator exit, within the uncertainty of the\n7.6±1.3 nJ measured with a photodiode located\nat the undulator exit. The simulated RMS band-\nwidth of 8.2% is also in good agreement with the\nmeasured bandwidth of 8.9±0.3%.\nWe have demonstrated, for the first time,\ncompact and extreme compression of a relativis-\ntic electron bunch driven by a plasma wakefield.\nAnalogously to chirped pulse amplification for\nlasers, the wakefield of a preceding dri"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 39
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 20
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 40
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 41
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 22
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 24
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 39
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 20
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 40
+        },
+        {
+          "n": 5,
+          "source": "2611.13436v1.pdf",
+          "position": 41
+        },
+        {
+          "n": 6,
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        },
+        {
+          "n": 7,
+          "source": "2611.13436v1.pdf",
+          "position": 22
+        },
+        {
+          "n": 8,
+          "source": "2611.13436v1.pdf",
+          "position": 24
+        }
+      ],
+      "latency_ms": 58137.32
+    },
+    {
+      "id": "12",
+      "question": "What kind of chicane compresses the witness bunch, and what field and R56 does it need?",
+      "reference_answer": "A compact, weakly bending magnetic chicane (peak field about 20 mT; four bending magnets) with R56 up to about 400 um, which compresses the bunch by about one order of magnitude.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Based on the provided documents, the witness bunch is compressed in a weakly bending, downstream magnetic chicane [3]. \n\nRegarding the required field and $R_{56}$:\n* It uses weakly bending dipoles with a peak magnetic field of $\\sim 20$ mT [1]. ($R_{56} = 100\\,\\mu\\text{m}$ corresponds to zero magnetic field in the chicane [4].)\n* Maximum compression is achieved when the magnitude of the longitudinal dispersion coefficient $R_{56}$ is set to equal the inverse of the bunch chirp at the chicane entrance [1].",
+      "retrieved_contexts": [
+        "r-scale bunch com-\npressor using weakly bending dipoles with peak\nmagnetic field∼20 mT. The ratio between the\nwitness bunch length at the exit and entrance of\nthe bunch compressor (the compression factor) is\nset by the dipole magnetic fields and the distance\nbetween the dipoles and is parametrized by the\nlongitudinal dispersion coefficientR 56. Maximum\ncompression is achieved when the magnitude of\ntheR 56 is set to equal the inverse of the bunch\nchirp at the chicane entrance.\nFollowing the bunch compression chicane, the\ncompressed bunch is incident on an aluminum\nfoil, where it emits coherent transition radiation\n(CTR) whose total energy scales inversely with\nthe length of the compressed bunch. The CTR\nsignal is measured on a pyroelectric detector (see\nMethods for details). We performed a",
+        "etector (see\nMethods for details). We performed a scan of the\nchicane longitudinal dispersion while measuring\nthe total CTR energy to determine theR 56 result-\ning in maximum compression, and the results are\nshown in Fig. 3. Note that the propagation of the\nbeam through free space from the plasma exit to\nthe chicane entrance adds 100µm to theR 56, such\nthat even when the chicane is fully turned off, the\nminimalR 56 is 100µm.\nIn Fig. 3, for both 2.7×10 15 cm−3 and 5.6×\n1015 cm−3 densities, we observe that the signal\nrises initially asR 56 increases, finds a maximum\nvalue, and then decreases. This is consistent with\nthe witness electron bunch compressing, reaching\na minimum bunch length and then lengthening\nas it goes beyond full compression. The simula-\ntion curve shows the calculated CTR s",
+        "blue lines show the energy distribution of the\nwitness bunch.\nelectric fields allow one to imprint strong longi-\ntudinal energy chirps on the beam. The large-\namplitude chirp is key to the extreme compres-\nsion mechanism for two reasons: first, the short-\nest achievable bunch duration for a given beam\nbrightness is inversely proportional to the energy\nchirp; second a large chirp allows one to com-\npress the electron beam without using strong\nbends [26], which typically spoil the electron beam\nquality in traditional compressor designs. In our\nexperiment, the chirped bunch is then compressed\nin a weakly bending, downstream magnetic chi-\ncane and its bunch duration is reduced by an\norder of magnitude. This fully compressed electron\nbunch is then utilized in the first demonstration\nof single-m",
+        "ream of the bunch\ncompression chicane as a function of the chicane\nlongitudinal dispersion coefficientR 56. Experi-\nmental data is shown for plasma densities of 2.7×\n1015 cm−3 and 5.6×1015 cm−3. The error bars cor-\nrespond to the standard deviation. Solid blue line\nis a simulation of the CTR signal for an ensem-\nble of linearly chirped electron bunches. Note that\nR56 = 100µm corresponds to zero magnetic field\nin the chicane.\nbunch at two different plasma densities, with rep-\nresentative shots shown in Fig. 2b,c. At a plasma\ndensity of 2.7×10 15 cm−3, the witness is acceler-\nated to a mean energy of 106.1 MeV and acquires\na 1.6±0.2 MeV RMS projected energy spread. At\nthis density, the range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.03–2.86 MeV. At a plasma den"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 15
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 16
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 8
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 15
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 16
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 8
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        }
+      ],
+      "latency_ms": 3853.75
+    },
+    {
+      "id": "13",
+      "question": "What future work do the authors propose?",
+      "reference_answer": "Scaling to shorter bunch durations and shorter FEL wavelengths via plasma-based injection, and developing multi-pulse, multi-color schemes for photon-based ultrafast pump-probe studies.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "Based on the provided documents, future experiments will explore scaling the experimental results to shorter bunch durations and shorter FEL wavelengths via plasma-based injection, as well as developing multi-pulse multi-color schemes to enable photon-based ultrafast pump-probe dynamics studies [3].",
+      "retrieved_contexts": [
+        "and numerical simulations. A.M. and C.E. con-\nceptualized the experiment. The manuscript was\nwritten by C. E., K.S, R. H., M.G., R.P., and L.V.\nwith inputs from all the co-authors. All authors\nextensively discussed the results and reviewed the\nmanuscript.\nCompeting interests\nThe authors declare no competing interests.\nDeclarations\nThis work has received funding from the United\nStates Department of Energy Early Career\nResearch Program Award.\nReferences\n[1] Durante, M., Orecchia, R. & Loeffler, J. S.\nCharged-particle therapy in cancer: clini-\ncal uses and future perspectives.Nature\nReviews Clinical Oncology14, 483–495\n(2017). URL http://dx.doi.org/10.1038/\nnrclinonc.2017.30.\n[2] lightsources.org. lightsources.org: The world-\nwide light source directory. https://\nlightsources.org/ (2025). Acc",
+        "from the corresponding authors upon\nreasonable request.\nCode availability\nThe analysis and simulation codes used in\nthis study are available from the corresponding\nauthors upon reasonable request.\nAcknowledgments.We thank I. Balossino, M.\nFerrario, S. Romeo, A. Zigler, A. Michelotti, A.\nVannozzi, A. Liedl, L. Giannessi, and all the\nmachine operators involved in the experimental\nrun.\nAuthors Contributions\nC. E., K.S, R. H., M.G., R.P., and L.V. planned\nand managed the experiment with inputs from all\nthe co-authors. M.G., and L.V., managed the pho-\ntocathode laser system. L.C., and A.B. designed\nand characterized the capillary system. C. E., K.S,\nR. H., M.G., R.P., and L.V. carried out the exper-\nimental campaign, performed the data analysis\nand numerical simulations. A.M. and C.E. con-\ncept",
+        "m in a single meter-\nscale undulator, yielding a pulse energy of 7.6±\n1.3 nJ, about four orders of magnitude above\nthe first beam-driven, plasma-based SASE FEL\ndemonstration [5]. This proof-of-principle exper-\niment establishes plasma-based compression as a\ncompact and scalable route towards few-cycle,\nwaveform-controlled FELs extending to the EUV\nand soft X-ray regimes [26, 27], with direct appli-\ncations in ultrafast quantum and materials sci-\nence, strong-field quantum electrodynamics and\nbeyond. Future experiments will explore scaling\nthese experimental results to shorter bunch dura-\ntions and shorter FEL wavelengths via plasma-\nbased injection [40, 41] as well as developing\nmulti-pulse multi-color schemes to enable photon\nbased ultrafast pump-probe dynamics studies.\n6\n\nMethods\n1 Gener",
+        "directory. https://\nlightsources.org/ (2025). Accessed: 2025-03-\n08.\n[3] Shiltsev, V. & Zimmermann, F. Modern and\nfuture colliders.Reviews of Modern Physics\n93, 015006 (2021). URL https://doi.org/10.\n1103/RevModPhys.93.015006.\n[4] Blazey, J.et al.Accelerator and beam\nphysics roadmap. Roadmap, U.S. Depart-\nment of Energy, Office of Science, Office\nof High Energy Physics (2023). URL\nhttps://science.osti.gov/hep/-/media/hep/\npdf/2022/ABP Roadmap 2023 final.pdf.\nAccessed: 2025-03-08.\n[5] Pompili, R.et al.Free-electron lasing\nwith compact beam-driven plasma wake-\nfield accelerator.Nature605, 659–\n662 (2022). URL https://doi.org/10.1038/\ns41586-022-04589-1.\n[6] Galletti, M.et al.Prospects for free-\nelectron lasers powered by plasma-wakefield-\naccelerated beams.Nature Photonics18,\n780–791 (2024)"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 45
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 44
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 26
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 46
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 45
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 44
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 26
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 46
+        }
+      ],
+      "latency_ms": 3265.79
+    },
+    {
+      "id": "14",
+      "question": "Compare the results at the two plasma densities used (2.7e15 and 5.6e15 cm^-3).",
+      "reference_answer": "At 2.7e15: mean energy 106.1 MeV, RMS energy spread 1.6 +/- 0.2 MeV (range 1.03-2.86 MeV over 100 shots). At 5.6e15: mean energy 109.9 MeV, spread 4.5 +/- 0.5 MeV (range 1.8-5.01 MeV). The higher density gives more energy gain and a larger chirp, and the transition-radiation signal peaks over a broader range of R56.",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "analysis",
+      "intent": "analysis",
+      "answer": "Summary\nThe document excerpts describe experiments evaluating witness electron bunch parameters, energy spreads, and compression characteristics at two different plasma densities: $2.7 \\times 10^{15}\\text{ cm}^{-3}$ and $5.6 \\times 10^{15}\\text{ cm}^{-3}$. Varying the plasma density controls the electron beam chirp, which subsequently affects the witness beam's acceleration, energy spread, and bunch compression dynamics.\n\nKey points\n- **Witness Beam Energy:** Higher plasma density accelerates the witness bunch to a higher mean energy.\n- **Energy Spread:** The higher plasma density results in a larger RMS projected energy spread and a broader range over consecutive shots.\n- **Bunch Compression and CTR Signal:** Both densities show a rise, maximum, and decrease in Coherent Transition Radiation (CTR) signal as the chicane dispersion ($R_{56}$) increases, indicating compression to a minimum bunch length followed by lengthening. \n- **Signal Breadth:** The higher density case ($5.6 \\times 10^{15}\\text{ cm}^{-3}$) exhibits a peak signal amplitude over a broader range of $R_{56}$ values.\n\nEvidence\n- **Mean Energy at $2.7 \\times 10^{15}\\text{ cm}^{-3}$:** At a plasma density of $2.7 \\times 10^{15}\\text{ cm}^{-3}$, the witness beam accelerates to a mean energy of 106.1 MeV [1].\n- **Energy Spread at $2.7 \\times 10^{15}\\text{ cm}^{-3}$:** The witness acquires a $1.6 \\pm 0.2\\text{ MeV}$ RMS projected energy spread, with a measured range of $1.03\\text{--}2.86\\text{ MeV}$ over 100 consecutive shots [1]. Simulation fits use a Gaussian distribution centered on $0.29\\text{ MeV}/\\mu\\text{m}$ with an RMS width of $0.04\\text{ MeV}/\\mu\\text{m}$ [2].\n- **Mean Energy at $5.6 \\times 10^{15}\\text{ cm}^{-3}$:** At a plasma density of $5.6 \\times 10^{15}\\text{ cm}^{-3}$, the witness accelerates further up to 109.9 MeV [6].\n- **Energy Spread at $5.6 \\times 10^{15}\\text{ cm}^{-3}$:** The witness acquires a $4.5 \\pm 0.5\\text{ MeV}$ RMS energy spread, with a measured range of $1.8\\text{--}5.01\\text{ MeV}$ over 100 consecutive shots [6].\n- **CTR Signal Behavior ($R_{56}$ scan):** For both $2.7 \\times 10^{15}\\text{ cm}^{-3}$ and $5.6 \\times 10^{15}\\text{ cm}^{-3}$ densities, the signal rises initially with $R_{56}$, finds a maximum, and decreases, indicating bunch compression to a minimum length and subsequent lengthening [3]. \n- **Broader Peak at $5.6 \\times 10^{15}\\text{ cm}^{-3}$:** The $5.6 \\times 10^{15}\\text{ cm}^{-3}$ density case exhibits a peak signal amplitude over a broader range of $R_{56}$ values [5].\n\nOpen questions\n- What causes the specific broader range of peak signal amplitudes observed at the higher plasma density?\n- How do other beam parameters (such as emittance or exact slice energy spread differences) explicitly compare between the two plasma densities beyond the reported projected energy spread and mean energy?",
+      "retrieved_contexts": [
+        "ream of the bunch\ncompression chicane as a function of the chicane\nlongitudinal dispersion coefficientR 56. Experi-\nmental data is shown for plasma densities of 2.7×\n1015 cm−3 and 5.6×1015 cm−3. The error bars cor-\nrespond to the standard deviation. Solid blue line\nis a simulation of the CTR signal for an ensem-\nble of linearly chirped electron bunches. Note that\nR56 = 100µm corresponds to zero magnetic field\nin the chicane.\nbunch at two different plasma densities, with rep-\nresentative shots shown in Fig. 2b,c. At a plasma\ndensity of 2.7×10 15 cm−3, the witness is acceler-\nated to a mean energy of 106.1 MeV and acquires\na 1.6±0.2 MeV RMS projected energy spread. At\nthis density, the range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.03–2.86 MeV. At a plasma den",
+        "The simula-\ntion curve shows the calculated CTR signal as\na function ofR 56 for linearly chirped Gaussian\nwitness bunch of 30 fs RMS duration at the chi-\ncane entrance. In order to capture shot-to-shot\njitter in our simulation of the multishot measure-\nment data, the calculated CTR signal at eachR 56\nvalue is the average of an ensemble of linearly\nchirped bunches with a Gaussian distribution cen-\ntered on 0.29 MeV/µm with an RMS width of\n0.04 MeV/µm fitted to the 2.7×10 15 cm−3 data.\nThe 2.7×10 15 cm−3 density data agrees well with\nthe simulated result.\nIn this experiment, control over the plasma\ndensity was utilized to exert control over the chirp\nof the electron beam. A more strongly chirped\nelectron beam will experience a higher correlated\nenergy spread, introducing higher order compre",
+        "etector (see\nMethods for details). We performed a scan of the\nchicane longitudinal dispersion while measuring\nthe total CTR energy to determine theR 56 result-\ning in maximum compression, and the results are\nshown in Fig. 3. Note that the propagation of the\nbeam through free space from the plasma exit to\nthe chicane entrance adds 100µm to theR 56, such\nthat even when the chicane is fully turned off, the\nminimalR 56 is 100µm.\nIn Fig. 3, for both 2.7×10 15 cm−3 and 5.6×\n1015 cm−3 densities, we observe that the signal\nrises initially asR 56 increases, finds a maximum\nvalue, and then decreases. This is consistent with\nthe witness electron bunch compressing, reaching\na minimum bunch length and then lengthening\nas it goes beyond full compression. The simula-\ntion curve shows the calculated CTR s",
+        "tra of the beam produced by the\n2.7×10 15 cm−3 density plasma. At each mean\nelectron energy, the simulations consider beams\nentering the undulator with a range of chirps vary-\ning from 0.2 to 0.4 MeV/µm, which were chosen to\nmatch the expected chirps from pyroelectric detec-\ntor measurements shown in Fig. 3. Longitudinal\nspace charge effects and the undulator’s longitu-\ndinal dispersion cause the electron beam phase\nspace to evolve and the bunch to decompress as\nit transits the undulator. The peak current of the\nelectron bunch falls from 4.8 kA at the undula-\ntor entrance to 1.0 kA at the exit, while the RMS\nbunch length grows from 2.3 fs to 12 fs (Fig. 5a).\nThe averaged undulator radiation spectra sim-\nulated at the two different beam energies fit to\nthe measured data as shown in Fig. 4b.",
+        "iation\nspectrum taken with no plasma.\nvalues where peak compression is achieved [19].\nThis behavior is observed in the 5.6×10 15 cm−3\ndensity case shown in Fig. 3, which exhibits a peak\nsignal amplitude over a broader range ofR 56 val-\nues. Based on our estimates of the energy chirp\nand slice energy spread of the witness beam and\nour beam dynamics simulations matching the data\nin Fig. 3, we expect the compression factor to\nbe one order of magnitude and the final witness\nbunch duration to be fs-scale at the exit of the\nbunch compressor.\nThe fully compressedO(fs) duration electron\nbeam is then sent into an undulator whose res-\nonant wavelength is tuned to 650 nm and is\ncomparable to the electron bunch length. The elec-\ntron beam emits coherent undulator radiation as\na single microbunch, lead",
+        "onsecutive shots is\n1.03–2.86 MeV. At a plasma density of 5.6×\n1015 cm−3, the witness is accelerated further up\nto 109.9 MeV, acquiring a 4.5±0.5 MeV RMS\nenergy spread. The range of RMS projected energy\nspreads measured over 100 consecutive shots is\n1.8–5.01 MeV.\nThe projected energy spread measured on the\nenergy spectrometer provides a measure of the\naverage chirp along the witness bunch. Based on\nmeasurements of the average and range of pro-\njected energy spreads and our simulations of the\nwitness bunch length at the plasma entrance,\nwe estimate the chirp acquired by the witness\nbunch at the plasma exit is in the range of\n∼0.12–0.56 MeV/µm. Such a large energy chirp\nis used to compress the bunch downstream of\nthe plasma with a small, meter-scale bunch com-\npressor using weakly bending di",
+        "tness\nbunch following the velocity bunching and accel-\neration in the linac sections. The measured undu-\nlator radiation spectrum with plasma-off stays\nbelow∼7% of the peak signal with plasma. Note\nthat the plasma-off spectrum is centered around\n750 nm because the lower energy witness bunch\nred-shifts the FEL resonance condition relative to\nthe plasma-on case.\nTo interpret the measured undulator radia-\ntion spectra, we simulated the single microbunch\nfree electron lasing interaction with the simula-\ntion code PUFFIN [39]. The simulation results\nare shown in Fig. 5 and described further in the\nMethods. Simulations were performed using elec-\ntron beams centered at mean energies of 106 MeV\nand 109 MeV to match the range of measured\nenergy spectra of the beam produced by the\n2.7×10 15 cm−3 den",
+        "r envelope phase stable, few-cycle, waveform-\ncontrolled extreme ultraviolet (EUV)/X-ray free\nelectron lasers (FELs) [25–28] and enabling break-\nthrough experiments in ultrafast quantum and\nmaterials science [10, 11], strong-field quantum\nelectrodynamics [9] and beyond.\nWhat enables extreme compression of the elec-\ntron beam in this experiment is the extremely\nlarge electric fields that can be sustained in a\nplasma accelerator (orders of magnitude larger\nthan with typical radiofrequency (RF) cavity-\nbased accelerators) [29, 30]. These ultra-strong\n2\n\nFig. 2:Electron energy spectra.Single-event\nenergy spectra of the driver and witness bunches\n(a) without plasma, (b) with plasma at density\n2.7×1015 cm−3, and (c) at density 5.6×1015 cm−3.\nThe blue lines show the energy distribution of the\nwit"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 16
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 19
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 14
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 22
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 7
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 13
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 17
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 16
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 23
+        },
+        {
+          "n": 5,
+          "source": "2611.13436v1.pdf",
+          "position": 19
+        },
+        {
+          "n": 6,
+          "source": "2611.13436v1.pdf",
+          "position": 14
+        },
+        {
+          "n": 7,
+          "source": "2611.13436v1.pdf",
+          "position": 22
+        },
+        {
+          "n": 8,
+          "source": "2611.13436v1.pdf",
+          "position": 7
+        }
+      ],
+      "latency_ms": 4642.93
+    },
+    {
+      "id": "15",
+      "question": "What was the total cost of the experiment?",
+      "reference_answer": "Not in the document (it should say so; the paper only mentions funding from a US Department of Energy Early Career Research Program Award). This row tests the \"not in the documents\" behavior (see KI-001).",
+      "source_docs": [
+        "2611.13436v1.pdf"
+      ],
+      "expected_intent": "qa",
+      "intent": "qa",
+      "answer": "The provided documents do not contain information about the total cost of the experiment.",
+      "retrieved_contexts": [
+        "and numerical simulations. A.M. and C.E. con-\nceptualized the experiment. The manuscript was\nwritten by C. E., K.S, R. H., M.G., R.P., and L.V.\nwith inputs from all the co-authors. All authors\nextensively discussed the results and reviewed the\nmanuscript.\nCompeting interests\nThe authors declare no competing interests.\nDeclarations\nThis work has received funding from the United\nStates Department of Energy Early Career\nResearch Program Award.\nReferences\n[1] Durante, M., Orecchia, R. & Loeffler, J. S.\nCharged-particle therapy in cancer: clini-\ncal uses and future perspectives.Nature\nReviews Clinical Oncology14, 483–495\n(2017). URL http://dx.doi.org/10.1038/\nnrclinonc.2017.30.\n[2] lightsources.org. lightsources.org: The world-\nwide light source directory. https://\nlightsources.org/ (2025). Acc",
+        "from the corresponding authors upon\nreasonable request.\nCode availability\nThe analysis and simulation codes used in\nthis study are available from the corresponding\nauthors upon reasonable request.\nAcknowledgments.We thank I. Balossino, M.\nFerrario, S. Romeo, A. Zigler, A. Michelotti, A.\nVannozzi, A. Liedl, L. Giannessi, and all the\nmachine operators involved in the experimental\nrun.\nAuthors Contributions\nC. E., K.S, R. H., M.G., R.P., and L.V. planned\nand managed the experiment with inputs from all\nthe co-authors. M.G., and L.V., managed the pho-\ntocathode laser system. L.C., and A.B. designed\nand characterized the capillary system. C. E., K.S,\nR. H., M.G., R.P., and L.V. carried out the exper-\nimental campaign, performed the data analysis\nand numerical simulations. A.M. and C.E. con-\ncept",
+        "gies fit to\nthe measured data as shown in Fig. 4b. Details\non the fitting procedure and results are provided\nin the Methods and in Extended Data Fig. 1.\nThe simulated FEL pulse energy curve in Fig. 5b\nrepresents the total energy in the spectrum pro-\nduced by taking the weighted sum of the spectra.\nThe simulated total pulse energy reaches 8.1 nJ at\nthe undulator exit, within the uncertainty of the\n7.6±1.3 nJ measured with a photodiode located\nat the undulator exit. The simulated RMS band-\nwidth of 8.2% is also in good agreement with the\nmeasured bandwidth of 8.9±0.3%.\nWe have demonstrated, for the first time,\ncompact and extreme compression of a relativis-\ntic electron bunch driven by a plasma wakefield.\nAnalogously to chirped pulse amplification for\nlasers, the wakefield of a preceding dri",
+        "FEL radi-\nation transverse size at the spectrometer entrance\nslit. The spectrometer has a diffraction grating\nwith 1200 lines/mm and can be rotated to accom-\nmodate wavelengths in the 200–900 nm spectral\nrange.\nAdopting a CCD coupled with a Hamamatsu\nC9547-01 intensifier (ICCD), we image the dis-\npersed light [5, 47, 48]. The ICCD camera is\npositioned at the exit of the imaging spectrometer.\nThe ICCD gate duration is set to 5 ns with\nan available scanning delay with respect to the\npulse arrival time. The dispersed light is measured\nwith a spectral resolution of 0.06 nm per pixel.\nThe entire spectral window available with such a\nconfiguration is about 16 nm.\n9\n\nData availability\nThe data that support the findings of this study\nare available from the corresponding authors upon\nreasonable req"
+      ],
+      "retrieved_sources": [
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 45
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 44
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 24
+        },
+        {
+          "source": "2611.13436v1.pdf",
+          "position": 43
+        }
+      ],
+      "sources": [
+        {
+          "n": 1,
+          "source": "2611.13436v1.pdf",
+          "position": 45
+        },
+        {
+          "n": 2,
+          "source": "2611.13436v1.pdf",
+          "position": 44
+        },
+        {
+          "n": 3,
+          "source": "2611.13436v1.pdf",
+          "position": 24
+        },
+        {
+          "n": 4,
+          "source": "2611.13436v1.pdf",
+          "position": 43
+        }
+      ],
+      "latency_ms": 2855.73
+    }
+  ]
+}

@@ -178,6 +178,45 @@ Nodes depend only on the interfaces in `services/base.py` (plus the provider-neu
 `services/errors.py`, see [ADR-0009](docs/adr/0009-nodes-may-use-error-helpers.md)); `services/container.py`
 is the only place that chooses concrete providers.
 
+## Running the evaluation
+
+The evaluation runner reads `eval/dataset.jsonl`, ingests supported documents from a directory,
+and writes metrics plus per-question results as JSON. Review **every reference answer** against
+the source paper before relying on these draft results; see [eval/README.md](eval/README.md).
+Place `2611.13436v1.pdf` in `data\` for the commands below, or pass the directory that contains the
+PDF to `--docs`.
+
+Baseline (summarization questions are skipped by default):
+
+```powershell
+python -m doc_agent.eval --dataset eval\dataset.jsonl --docs data --out eval\results\baseline.json
+```
+
+Run an experiment with a different retrieval count and chunk size:
+
+```powershell
+python -m doc_agent.eval --dataset eval\dataset.jsonl --docs data --k 8 --chunk-size 800 --chunk-overlap 50 --out eval\results\k8-chunk800.json
+```
+
+The runner supports `--include-summarize`, `--limit N`, `--k`, `--chunk-size`, `--chunk-overlap`,
+`--judge`, and `--out`. It prints an estimated and actual number of pipeline LLM calls; these counts
+exclude embedding requests and optional judge calls. The JSON records the selected chunk settings,
+retrieval `k`, provider and model, intent accuracy, retrieval hit rate, invalid citation rate, and
+average latency per question and node. LLM-judged scores are `null` unless `--judge` is requested.
+
+To request Ragas scores, install its optional dependency and configure a real Gemini model and key:
+
+```powershell
+pip install -e ".[eval]"
+python -m doc_agent.eval --dataset eval\dataset.jsonl --docs data --judge --out eval\results\judged.json
+```
+
+Judging uses the Ragas collections API with Gemini for faithfulness, answer relevance, and context
+relevance. It adds provider calls; tracing should remain off unless you explicitly want prompts and
+document excerpts sent to LangSmith. Without Ragas or a configured Gemini judge, the judge metrics
+remain `null` and the output explains why. See the [Ragas Gemini integration](https://docs.ragas.io/en/stable/howtos/integrations/gemini/)
+and [metric documentation](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/).
+
 ## Extension recipes
 
 - **New capability:** add one node file in `nodes/` with a `make_<name>(llm, store, ...)` factory, one

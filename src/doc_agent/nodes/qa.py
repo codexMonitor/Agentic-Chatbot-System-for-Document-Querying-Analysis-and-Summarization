@@ -4,6 +4,7 @@ from doc_agent.nodes._utils import (
     question_text,
     reply,
     source_refs,
+    warn_invalid_citations,
 )
 from doc_agent.prompts import QA
 from doc_agent.services.base import LLMService, VectorStore
@@ -21,6 +22,7 @@ def make_qa(llm: LLMService, store: VectorStore, k: int = 4):
                 sources=[],
             )
         answer = llm.invoke(QA.format(context=format_context(chunks), question=question))
+        warn_invalid_citations(answer, len(chunks), "qa")
         return reply(answer, context=chunks, sources=source_refs(chunks))
 
     return guard_llm_errors("qa", run)
