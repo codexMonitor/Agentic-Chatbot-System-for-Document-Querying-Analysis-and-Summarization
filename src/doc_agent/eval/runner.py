@@ -25,6 +25,7 @@ _REQUIRED_FIELDS = {
     "source_docs",
     "expected_intent",
 }
+_OPTIONAL_FIELDS = {"key_facts"}
 _INTENTS = {"qa", "analysis", "summarize"}
 _NODE_TIMING_PATTERN = re.compile(r"node=([\w-]+) duration_ms=(\d+)")
 _JUDGE_METRICS = {
@@ -73,8 +74,15 @@ def _read_dataset(path: Path) -> list[dict[str, Any]]:
             row = json.loads(line)
         except json.JSONDecodeError as error:
             raise ValueError(f"{path}:{line_number}: invalid JSON: {error.msg}") from error
-        if not isinstance(row, dict) or set(row) != _REQUIRED_FIELDS:
-            raise ValueError(f"{path}:{line_number}: expected fields {_REQUIRED_FIELDS}")
+        if (
+            not isinstance(row, dict)
+            or not _REQUIRED_FIELDS.issubset(row)
+            or set(row) - (_REQUIRED_FIELDS | _OPTIONAL_FIELDS)
+        ):
+            raise ValueError(
+                f"{path}:{line_number}: expected required fields {_REQUIRED_FIELDS} "
+                f"and optional fields {_OPTIONAL_FIELDS}"
+            )
         if not isinstance(row["id"], str) or not row["id"]:
             raise ValueError(f"{path}:{line_number}: id must be a non-empty string")
         if row["id"] in seen_ids:
@@ -87,7 +95,12 @@ def _read_dataset(path: Path) -> list[dict[str, Any]]:
             isinstance(source, str) and source for source in row["source_docs"]
         ):
             raise ValueError(f"{path}:{line_number}: source_docs must be a list of strings")
-        if row["expected_intent"] not in _INTENTS:
+        if "key_facts" in row and (
+            not isinstance(row["key_facts"], list)
+            or not all(isinstance(fact, str) and fact.strip() for fact in row["key_facts"])
+        ):
+            raise ValueError(f"{path}:{line_number}: key_facts must be a list of non-empty strings")
+        if not isinstance(row["expected_intent"], str) or row["expected_intent"] not in _INTENTS:
             raise ValueError(f"{path}:{line_number}: invalid expected_intent")
         rows.append(row)
     if not rows:
