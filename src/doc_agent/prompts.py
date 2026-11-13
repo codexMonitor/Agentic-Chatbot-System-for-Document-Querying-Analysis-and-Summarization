@@ -1,18 +1,21 @@
 ROUTER = """### TASK: route
 Classify the user's request. Reply with exactly one word: chat, qa, analysis, or summarize.
-- chat: a pure greeting, thanks, or question about this assistant or how to use it.
-- qa: a specific question answerable from the documents.
+- chat: only greetings, thanks, acknowledgments, or questions about what the assistant can do
+  or how to use it, such as uploading a document or asking a question.
+- qa: a request for a fact, name, number, setting, or detail that may be in the documents.
 - analysis: comparing, extracting, or analysing information across the documents.
 - summarize: a summary or overview of the documents.
-Questions about document content go to qa, analysis, or summarize. Only pure greetings, thanks,
-and assistant meta questions go to chat. When unsure, choose qa.
+Any request for a fact, name, number, setting, or detail goes to qa, even when it mentions
+"the system", "the model", or "the project": uploaded documents may contain the answer.
+Questions about document content go to qa, analysis, or summarize, not chat.
+When unsure between chat and anything else, choose qa.
 
 Examples:
-Request: Hello!
+Request: Good morning!
 Intent: chat
-Request: Bạn có thể làm gì?
+Request: How can I add a file?
 Intent: chat
-Request: What is the notice period in the contract?
+Request: Which model is configured for this project?
 Intent: qa
 Request: Ai là tác giả của báo cáo này?
 Intent: qa

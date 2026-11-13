@@ -128,6 +128,19 @@ def test_router_prompt_keeps_task_header_and_separator():
     assert "\n---\n{question}" in ROUTER
 
 
+def test_router_prompt_routes_factual_questions_to_qa_without_dataset_examples():
+    header = ROUTER.partition("\n---\n")[0]
+    assert "fact, name, number, setting, or detail goes to qa" in header
+    assert 'mentions\n"the system", "the model", or "the project"' in header
+    assert "When unsure between chat and anything else, choose qa." in header
+    prompt_examples = {
+        line.removeprefix("Request: ").strip()
+        for line in header.splitlines()
+        if line.startswith("Request: ")
+    }
+    assert prompt_examples.isdisjoint(item["question"] for item in load_examples())
+
+
 def test_intents_file_is_well_formed_and_balanced():
     examples = load_examples()
     assert len(examples) == 33
