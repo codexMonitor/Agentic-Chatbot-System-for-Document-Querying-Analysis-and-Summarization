@@ -7,10 +7,15 @@ from doc_agent.nodes._utils import check_citations
 
 _CITATION_PATTERN = re.compile(r"\[(\d+)\]")
 _DECIMAL_COMMA_PATTERN = re.compile(r"(?<=\d),(?=\d)")
+_LATEX_WORD_PATTERN = re.compile(r"\b(?:sim|text|mathrm|approx)\b")
 
 
 def _normalize_key_fact_text(text: str) -> str:
-    return _DECIMAL_COMMA_PATTERN.sub(".", text).casefold()
+    text = text.casefold().translate(str.maketrans("", "", "$\\{}"))
+    text = _LATEX_WORD_PATTERN.sub(" ", text)
+    text = text.replace("-", " ").replace("_", " ")
+    text = _DECIMAL_COMMA_PATTERN.sub(".", text)
+    return " ".join(text.split())
 
 
 def calculate_key_fact_metrics(results: list[dict[str, Any]]) -> dict[str, float | None]:
