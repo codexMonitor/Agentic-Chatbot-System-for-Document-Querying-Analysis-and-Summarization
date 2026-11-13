@@ -173,6 +173,42 @@ def test_fake_llm_routes_chat_examples(question):
     assert route(FakeLLM(), question) == "chat"
 
 
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Good afternoon!",
+        "Thank you very much!",
+        "Cảm ơn rất nhiều!",
+        "Được rồi.",
+        "That's helpful.",
+        "Who are you?",
+        "How can I upload a file?",
+        "How do I start a conversation?",
+        "How do I ask a question?",
+        "How do I start?",
+        "How can I upload?",
+    ],
+)
+def test_fake_llm_recognizes_general_chat_patterns(question):
+    assert route(FakeLLM(), question) == "chat"
+
+
+@pytest.mark.parametrize(
+    ("question", "expected"),
+    [
+        ("Hello, what model does this system use?", "qa"),
+        ("Thanks! Which version of the model is configured?", "qa"),
+        ("What is the name of the project?", "qa"),
+        ("How do I use the embedding model?", "qa"),
+        ("How do I use the system to identify the model?", "qa"),
+        ("Hi, summarize the contract.", "summarize"),
+        ("Thanks, compare the reports.", "analysis"),
+    ],
+)
+def test_fake_llm_does_not_confuse_factual_or_mixed_requests_with_chat(question, expected):
+    assert route(FakeLLM(), question) == expected
+
+
 @pytest.mark.real
 def test_real_router_accuracy_on_intents_file(gemini_settings):
     examples = load_examples()

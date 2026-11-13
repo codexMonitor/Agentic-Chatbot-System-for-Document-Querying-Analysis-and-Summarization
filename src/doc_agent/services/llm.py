@@ -12,29 +12,26 @@ from doc_agent.services.errors import LLMError, call_with_retry, mask_secrets
 _TASK_RE = re.compile(r"### TASK: (\w+)")
 _SUMMARIZE_HINTS = ("summar", "tl;dr", "overview")
 _ANALYSIS_HINTS = ("analy", "compare", "extract", "key points", "pros and cons")
-_CHAT_QUESTIONS = {
-    "hello",
-    "hello there",
-    "hi",
-    "hi there",
-    "hey",
-    "thanks",
-    "thank you",
-    "thanks for your help",
-    "what can you do",
-    "how can you help",
-    "how do i use this assistant",
-    "xin chào",
-    "chào bạn",
-    "cảm ơn",
-    "cảm ơn bạn",
-    "bạn có thể làm gì",
-}
+_CHAT_PATTERNS = (
+    r"(?:hello|hi|hey|good (?:morning|afternoon|evening)|xin chào|chào)"
+    r"(?: (?:there|everyone|bạn|anh|chị))?",
+    r"(?:thanks|thank you|many thanks)"
+    r"(?: (?:very much|so much|a lot|for (?:your|the) (?:help|assistance)))?",
+    r"cảm ơn(?: (?:bạn|anh|chị|rất|nhiều|lắm))*",
+    r"(?:great|good|okay|ok|got it|understood|được rồi|đã hiểu)"
+    r"(?: (?:that|this) (?:helps|helped|is helpful|s helpful))?",
+    r"(?:that|this) (?:helps|helped|is helpful|s helpful)",
+    r"(?:who are you|what can you do|how can you help|bạn có thể làm gì)",
+    r"how (?:do|can|should) i (?:use|open|start|upload|add|ask)"
+    r"(?: (?:a |an |the |my |this |your )?"
+    r"(?:document|file|assistant|chatbot|app|application|system|conversation|question))?"
+    r"(?: to (?:the |this )?(?:assistant|chatbot|app|application|system))?",
+)
 
 
 def _is_chat_question(question: str) -> bool:
     normalized = " ".join(re.sub(r"[^\w\s]", " ", question.lower()).split())
-    return normalized in _CHAT_QUESTIONS
+    return any(re.fullmatch(pattern, normalized) for pattern in _CHAT_PATTERNS)
 
 
 def _trace_inputs(inputs: dict) -> dict:
