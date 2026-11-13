@@ -241,6 +241,9 @@ def run_evaluation(
                     "intent": result["intent"],
                     "answer": result["answer"],
                     "retrieved_contexts": [chunk.text for chunk in chunks],
+                    "retrieved_sources": [
+                        {"source": chunk.source, "position": chunk.position} for chunk in chunks
+                    ],
                     "sources": sources,
                     "latency_ms": round(latency_ms, 2),
                 }

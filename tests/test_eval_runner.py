@@ -128,6 +128,7 @@ def test_runner_can_include_summarize_questions_offline(tmp_path, monkeypatch):
     assert output["counts"]["skipped"] == 0
     assert output["counts"]["llm_calls_expected"] == 6
     assert output["counts"]["llm_calls_actual"] == 6
+    assert output["metrics"]["retrieval_hit_rate"] == 1
 
 
 def test_judge_flag_keeps_scores_null_when_only_fake_provider_is_configured(

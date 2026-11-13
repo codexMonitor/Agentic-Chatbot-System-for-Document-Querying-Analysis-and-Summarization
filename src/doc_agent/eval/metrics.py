@@ -27,7 +27,7 @@ def calculate_metrics(
     invalid_count = 0
     for result in results:
         expected = {Path(source).name.casefold() for source in result["source_docs"]}
-        actual = {source["source"].casefold() for source in result["sources"]}
+        actual = {source["source"].casefold() for source in result["retrieved_sources"]}
         retrieval_hits += bool(expected & actual)
         answer = result["answer"]
         citation_count += len(_CITATION_PATTERN.findall(answer))
