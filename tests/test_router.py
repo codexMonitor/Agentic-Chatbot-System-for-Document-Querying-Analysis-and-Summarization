@@ -32,8 +32,43 @@ def route(llm, question: str) -> str:
 
 
 def accuracy(llm, examples: list[dict]) -> float:
-    hits = sum(route(llm, item["question"]) == item["intent"] for item in examples)
+    hits = 0
+    for item in examples:
+        actual = route(llm, item["question"])
+        expected = item["intent"]
+        if actual == expected:
+            hits += 1
+        else:
+            print(
+                f"misclassified: question={item['question']!r}, "
+                f"expected={expected}, actual={actual}"
+            )
     return hits / len(examples)
+
+
+def test_accuracy_reports_each_misclassification_without_repeating_calls(capsys):
+    class ScriptedLLM:
+        def __init__(self):
+            self.answers = iter(["chat", "qa", "analysis"])
+            self.calls = 0
+
+        def invoke(self, prompt):
+            self.calls += 1
+            return next(self.answers)
+
+    llm = ScriptedLLM()
+    examples = [
+        {"question": "Hello!", "intent": "chat"},
+        {"question": "Summarize this.", "intent": "summarize"},
+        {"question": "What is Scrum?", "intent": "qa"},
+    ]
+
+    assert accuracy(llm, examples) == pytest.approx(1 / 3)
+    assert llm.calls == len(examples)
+    output = capsys.readouterr().out
+    assert "question='Summarize this.', expected=summarize, actual=qa" in output
+    assert "question='What is Scrum?', expected=qa, actual=analysis" in output
+    assert "Hello!" not in output
 
 
 @pytest.mark.parametrize(
