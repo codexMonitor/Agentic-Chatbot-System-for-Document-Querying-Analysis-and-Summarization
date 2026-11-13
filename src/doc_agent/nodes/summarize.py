@@ -1,6 +1,7 @@
 import logging
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
 from typing import TypeVar
 
 from doc_agent.nodes._utils import guard_llm_errors, reply
@@ -17,7 +18,7 @@ R = TypeVar("R")
 def _parallel_map(func: Callable[[T], R], items: list[T], workers: int) -> list[R]:
     """Like `map` on a thread pool: results keep input order and the first error stops the rest."""
     with ThreadPoolExecutor(max_workers=workers) as pool:
-        futures = [pool.submit(func, item) for item in items]
+        futures = [pool.submit(copy_context().run, func, item) for item in items]
         try:
             return [future.result() for future in futures]
         except BaseException:

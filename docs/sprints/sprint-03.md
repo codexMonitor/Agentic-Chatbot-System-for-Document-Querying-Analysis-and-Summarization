@@ -43,6 +43,6 @@ To be filled in after the sprint review.
 
 ## Retrospective
 
-- What went well:
-- What to improve:
-- Actions for the next sprint:
+- What went well: Worked more effectively.
+- What to improve: Reduce API calls for Copilot in Phase 4 (Making UI).
+- Actions for the next sprint: Building UI with Streamlit.

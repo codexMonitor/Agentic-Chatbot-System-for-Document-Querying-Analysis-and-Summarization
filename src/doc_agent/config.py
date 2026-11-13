@@ -13,11 +13,14 @@ class Settings:
     embedding_model: str = ""
     vector_store: str = "memory"
     persist_dir: str = ".doc_agent_data"
+    max_upload_mb: int = 20
     # Empty means `<persist_dir>/checkpoints.sqlite`.
     checkpoint_db: str = ""
     chunk_size: int = 500
     chunk_overlap: int = 50
     retrieval_k: int = 4
+    chat_timeout_s: float = 120.0
+    summarize_timeout_s: float = 600.0
     llm_timeout_s: float = 60.0
     llm_max_retries: int = 8
     summarize_workers: int = 2
@@ -44,10 +47,15 @@ def load_settings() -> Settings:
         embedding_model=env.get("DOC_AGENT_EMBEDDING_MODEL", defaults.embedding_model),
         vector_store=env.get("DOC_AGENT_VECTOR_STORE", defaults.vector_store),
         persist_dir=env.get("DOC_AGENT_PERSIST_DIR", defaults.persist_dir),
+        max_upload_mb=int(env.get("DOC_AGENT_MAX_UPLOAD_MB", defaults.max_upload_mb)),
         checkpoint_db=env.get("DOC_AGENT_CHECKPOINT_DB", defaults.checkpoint_db),
         chunk_size=int(env.get("DOC_AGENT_CHUNK_SIZE", defaults.chunk_size)),
         chunk_overlap=int(env.get("DOC_AGENT_CHUNK_OVERLAP", defaults.chunk_overlap)),
         retrieval_k=int(env.get("DOC_AGENT_RETRIEVAL_K", defaults.retrieval_k)),
+        chat_timeout_s=float(env.get("DOC_AGENT_CHAT_TIMEOUT_S", defaults.chat_timeout_s)),
+        summarize_timeout_s=float(
+            env.get("DOC_AGENT_SUMMARIZE_TIMEOUT_S", defaults.summarize_timeout_s)
+        ),
         llm_timeout_s=float(env.get("DOC_AGENT_LLM_TIMEOUT_S", defaults.llm_timeout_s)),
         llm_max_retries=int(env.get("DOC_AGENT_LLM_MAX_RETRIES", defaults.llm_max_retries)),
         summarize_workers=int(env.get("DOC_AGENT_SUMMARIZE_WORKERS", defaults.summarize_workers)),
