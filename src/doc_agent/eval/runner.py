@@ -244,23 +244,24 @@ def run_evaluation(
             latency_ms = (time.perf_counter() - start) * 1000
             chunks = result.get("context") or []
             sources = result.get("sources") or []
-            results.append(
-                {
-                    "id": row["id"],
-                    "question": row["question"],
-                    "reference_answer": row["reference_answer"],
-                    "source_docs": row["source_docs"],
-                    "expected_intent": row["expected_intent"],
-                    "intent": result["intent"],
-                    "answer": result["answer"],
-                    "retrieved_contexts": [chunk.text for chunk in chunks],
-                    "retrieved_sources": [
-                        {"source": chunk.source, "position": chunk.position} for chunk in chunks
-                    ],
-                    "sources": sources,
-                    "latency_ms": round(latency_ms, 2),
-                }
-            )
+            result_row = {
+                "id": row["id"],
+                "question": row["question"],
+                "reference_answer": row["reference_answer"],
+                "source_docs": row["source_docs"],
+                "expected_intent": row["expected_intent"],
+                "intent": result["intent"],
+                "answer": result["answer"],
+                "retrieved_contexts": [chunk.text for chunk in chunks],
+                "retrieved_sources": [
+                    {"source": chunk.source, "position": chunk.position} for chunk in chunks
+                ],
+                "sources": sources,
+                "latency_ms": round(latency_ms, 2),
+            }
+            if "key_facts" in row:
+                result_row["key_facts"] = row["key_facts"]
+            results.append(result_row)
     finally:
         node_logger.removeHandler(timing_handler)
         node_logger.setLevel(original_level)

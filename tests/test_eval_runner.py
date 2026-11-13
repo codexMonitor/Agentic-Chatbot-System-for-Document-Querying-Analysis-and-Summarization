@@ -95,6 +95,8 @@ def test_runner_writes_offline_metrics_and_null_judge_scores(tmp_path, monkeypat
     assert output["metrics"]["intent_accuracy"] == 1
     assert output["metrics"]["retrieval_hit_rate"] == 1
     assert output["metrics"]["invalid_citation_rate"] == 0
+    assert output["metrics"]["key_fact_answer_rate"] is None
+    assert output["metrics"]["key_fact_context_rate"] is None
     assert isinstance(output["metrics"]["avg_latency_ms"]["per_question"], float)
     assert output["metrics"]["avg_latency_ms"]["per_node"]
     assert output["metrics"]["faithfulness"] is None
@@ -158,3 +160,34 @@ def test_judge_flag_keeps_scores_null_when_only_fake_provider_is_configured(
     assert output["judge"]["status"] == "unavailable"
     assert "DOC_AGENT_LLM_PROVIDER=gemini" in output["judge"]["reason"]
     assert "Judge metrics: null" in capsys.readouterr().out
+
+
+def test_runner_lists_missing_key_facts_for_each_question(tmp_path, monkeypatch):
+    dataset, docs = _make_offline_inputs(tmp_path, monkeypatch)
+    rows = [json.loads(line) for line in dataset.read_text(encoding="utf-8").splitlines()]
+    rows[0]["key_facts"] = ["Scrum", "missing fact"]
+    dataset.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+    output_path = tmp_path / "results" / "key-facts.json"
+
+    main(
+        [
+            "--dataset",
+            str(dataset),
+            "--docs",
+            str(docs),
+            "--limit",
+            "1",
+            "--out",
+            str(output_path),
+        ]
+    )
+
+    output = json.loads(output_path.read_text(encoding="utf-8"))
+    result = output["results"][0]
+    assert result["key_facts"] == ["Scrum", "missing fact"]
+    assert result["missing_key_facts"] == {
+        "answer": ["missing fact"],
+        "context": ["missing fact"],
+    }
+    assert output["metrics"]["key_fact_answer_rate"] == 0.5
+    assert output["metrics"]["key_fact_context_rate"] == 0.5

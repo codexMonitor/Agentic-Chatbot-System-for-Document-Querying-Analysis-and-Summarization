@@ -6,6 +6,39 @@ from typing import Any
 from doc_agent.nodes._utils import check_citations
 
 _CITATION_PATTERN = re.compile(r"\[(\d+)\]")
+_DECIMAL_COMMA_PATTERN = re.compile(r"(?<=\d),(?=\d)")
+
+
+def _normalize_key_fact_text(text: str) -> str:
+    return _DECIMAL_COMMA_PATTERN.sub(".", text).casefold()
+
+
+def calculate_key_fact_metrics(results: list[dict[str, Any]]) -> dict[str, float | None]:
+    answer_rates = []
+    context_rates = []
+    for result in results:
+        key_facts = result.get("key_facts")
+        if not key_facts:
+            result.pop("missing_key_facts", None)
+            continue
+        normalized_answer = _normalize_key_fact_text(result["answer"])
+        normalized_context = _normalize_key_fact_text(" ".join(result["retrieved_contexts"]))
+        missing_answer = [
+            fact for fact in key_facts if _normalize_key_fact_text(fact) not in normalized_answer
+        ]
+        missing_context = [
+            fact for fact in key_facts if _normalize_key_fact_text(fact) not in normalized_context
+        ]
+        result["missing_key_facts"] = {
+            "answer": missing_answer,
+            "context": missing_context,
+        }
+        answer_rates.append((len(key_facts) - len(missing_answer)) / len(key_facts))
+        context_rates.append((len(key_facts) - len(missing_context)) / len(key_facts))
+    return {
+        "key_fact_answer_rate": mean(answer_rates) if answer_rates else None,
+        "key_fact_context_rate": mean(context_rates) if context_rates else None,
+    }
 
 
 def calculate_metrics(
@@ -16,6 +49,8 @@ def calculate_metrics(
             "intent_accuracy": None,
             "retrieval_hit_rate": None,
             "invalid_citation_rate": None,
+            "key_fact_answer_rate": None,
+            "key_fact_context_rate": None,
             "avg_latency_ms": {"per_question": None, "per_node": {}},
         }
 
@@ -38,7 +73,7 @@ def calculate_metrics(
         for node, durations in sorted(node_latencies_ms.items())
         if durations
     }
-    return {
+    metrics = {
         "intent_accuracy": intent_accuracy,
         "retrieval_hit_rate": retrieval_hits / len(results),
         "invalid_citation_rate": invalid_count / citation_count if citation_count else 0.0,
@@ -47,3 +82,5 @@ def calculate_metrics(
             "per_node": per_node,
         },
     }
+    metrics.update(calculate_key_fact_metrics(results))
+    return metrics
