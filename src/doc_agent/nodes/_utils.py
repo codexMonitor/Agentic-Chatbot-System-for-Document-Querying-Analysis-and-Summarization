@@ -6,12 +6,15 @@ from collections.abc import Callable
 from langchain_core.messages import AIMessage
 
 from doc_agent.services.base import Chunk
-from doc_agent.services.errors import LLMError
+from doc_agent.services.errors import LLMError, RequestDeadlineExceeded
 from doc_agent.state import AgentState
 
 logger = logging.getLogger(__name__)
 
 LLM_UNAVAILABLE = "The language model is unavailable. Please try again."
+SUMMARIZE_TIMEOUT = (
+    "The document may be too long to summarize within the time limit. Please try again later."
+)
 _CITATION_PATTERN = re.compile(r"\[(\d+)\]")
 
 
@@ -24,7 +27,14 @@ def guard_llm_errors(name: str, fn: Callable[[AgentState], dict]) -> Callable[[A
         except LLMError as error:
             # Only the (key-masked) error text is logged, never the prompt.
             logger.warning("node=%s failed: %s", name, error)
-            return reply(LLM_UNAVAILABLE, context=[], sources=[])
+            message = (
+                SUMMARIZE_TIMEOUT
+                if name == "summarize"
+                and isinstance(error, RequestDeadlineExceeded)
+                and error.intent == "summarize"
+                else LLM_UNAVAILABLE
+            )
+            return reply(message, context=[], sources=[])
 
     return run
 

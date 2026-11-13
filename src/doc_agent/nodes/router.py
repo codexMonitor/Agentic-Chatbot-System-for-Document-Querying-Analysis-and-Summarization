@@ -4,7 +4,7 @@ import re
 from doc_agent.nodes._utils import question_text
 from doc_agent.prompts import ROUTER
 from doc_agent.services.base import LLMService
-from doc_agent.services.errors import LLMError
+from doc_agent.services.errors import LLMError, set_request_intent
 from doc_agent.state import AgentState
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ def make_router(llm: LLMService):
             logger.warning("router: LLM unavailable (%s), using intent=%s", error, _DEFAULT_INTENT)
             return {"intent": _DEFAULT_INTENT}
         intent = parse_intent(raw)
+        set_request_intent(intent)
         logger.info("router: intent=%s", intent)
         return {"intent": intent}
 

@@ -7,7 +7,12 @@ from langsmith import traceable
 from doc_agent.config import Settings
 from doc_agent.services._gemini import make_gemini_client
 from doc_agent.services.base import LLMService
-from doc_agent.services.errors import LLMError, call_with_retry, mask_secrets
+from doc_agent.services.errors import (
+    LLMError,
+    call_with_retry,
+    mask_secrets,
+    request_remaining_s,
+)
 
 _TASK_RE = re.compile(r"### TASK: (\w+)")
 _SUMMARIZE_HINTS = ("summar", "tl;dr", "overview")
@@ -104,6 +109,7 @@ class GeminiLLM:
             raise LLMError("DOC_AGENT_LLM_MODEL is not set: choose a Gemini model name.")
         self._model = settings.llm_model
         self._max_retries = settings.llm_max_retries
+        self._timeout_s = settings.llm_timeout_s
         self._client = client if client is not None else make_gemini_client(settings)
         self._traced_generate_content = traceable(
             self._generate_content,
@@ -123,8 +129,21 @@ class GeminiLLM:
         return text
 
     def _generate_content(self, prompt: str) -> Any:
+        def generate() -> Any:
+            remaining_s = request_remaining_s()
+            if remaining_s is None:
+                return self._client.models.generate_content(model=self._model, contents=prompt)
+
+            from google.genai import types
+
+            timeout_ms = max(1, int(min(self._timeout_s, remaining_s) * 1000))
+            config = types.GenerateContentConfig(http_options=types.HttpOptions(timeout=timeout_ms))
+            return self._client.models.generate_content(
+                model=self._model, contents=prompt, config=config
+            )
+
         return call_with_retry(
-            lambda: self._client.models.generate_content(model=self._model, contents=prompt),
+            generate,
             max_retries=self._max_retries,
             what=f"Gemini model '{self._model}'",
         )

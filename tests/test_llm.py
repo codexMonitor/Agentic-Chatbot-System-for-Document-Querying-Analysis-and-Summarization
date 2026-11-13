@@ -3,7 +3,12 @@ import pytest
 from conftest import pytest_collection_modifyitems
 from doc_agent.config import Settings
 from doc_agent.services.container import _make_llm
-from doc_agent.services.errors import LLMError, call_with_retry
+from doc_agent.services.errors import (
+    LLMError,
+    call_with_retry,
+    request_deadline,
+    set_request_intent,
+)
 from doc_agent.services.llm import LLM_PROVIDERS, FakeLLM, GeminiLLM
 
 
@@ -15,9 +20,11 @@ class StubModels:
     def __init__(self, outcomes):
         self.outcomes = list(outcomes)
         self.calls = 0
+        self.configs = []
 
-    def generate_content(self, model, contents):
+    def generate_content(self, model, contents, config=None):
         self.calls += 1
+        self.configs.append(config)
         outcome = self.outcomes.pop(0)
         if isinstance(outcome, Exception):
             raise outcome
@@ -39,6 +46,15 @@ def test_gemini_returns_text():
     llm, client = make_llm(["OK"])
     assert llm.invoke("Say OK") == "OK"
     assert client.models.calls == 1
+
+
+def test_gemini_request_timeout_is_limited_by_the_shared_deadline(monkeypatch):
+    monkeypatch.setattr("doc_agent.services.errors._monotonic", lambda: 10.0)
+    llm, client = make_llm(["OK"])
+    with request_deadline(chat_timeout_s=12, summarize_timeout_s=600):
+        set_request_intent("qa")
+        assert llm.invoke("Say OK") == "OK"
+    assert client.models.configs[0].http_options.timeout == 12000
 
 
 def test_provider_exception_becomes_llm_error():

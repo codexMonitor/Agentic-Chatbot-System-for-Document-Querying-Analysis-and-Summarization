@@ -12,6 +12,9 @@ ENV_VARS = [
     "DOC_AGENT_CHUNK_SIZE",
     "DOC_AGENT_CHUNK_OVERLAP",
     "DOC_AGENT_RETRIEVAL_K",
+    "DOC_AGENT_MAX_UPLOAD_MB",
+    "DOC_AGENT_CHAT_TIMEOUT_S",
+    "DOC_AGENT_SUMMARIZE_TIMEOUT_S",
     "DOC_AGENT_LLM_TIMEOUT_S",
     "DOC_AGENT_LLM_MAX_RETRIES",
     "DOC_AGENT_CHECKPOINT_DB",
@@ -34,6 +37,9 @@ def test_defaults():
     settings = load_settings()
     assert settings == Settings()
     assert settings.persist_dir == ".doc_agent_data"
+    assert settings.max_upload_mb == 20
+    assert settings.chat_timeout_s == 120.0
+    assert settings.summarize_timeout_s == 600.0
     assert settings.llm_timeout_s == 60.0
     assert settings.llm_max_retries == 8
     assert settings.summarize_workers == 2
@@ -47,6 +53,9 @@ def test_env_overrides_defaults(monkeypatch):
     monkeypatch.setenv("DOC_AGENT_EMBEDDING_PROVIDER", "gemini")
     monkeypatch.setenv("DOC_AGENT_EMBEDDING_MODEL", "some-embedding")
     monkeypatch.setenv("DOC_AGENT_PERSIST_DIR", "store")
+    monkeypatch.setenv("DOC_AGENT_MAX_UPLOAD_MB", "7")
+    monkeypatch.setenv("DOC_AGENT_CHAT_TIMEOUT_S", "12.5")
+    monkeypatch.setenv("DOC_AGENT_SUMMARIZE_TIMEOUT_S", "45")
     monkeypatch.setenv("DOC_AGENT_LLM_TIMEOUT_S", "12.5")
     monkeypatch.setenv("DOC_AGENT_LLM_MAX_RETRIES", "5")
     monkeypatch.setenv("DOC_AGENT_SUMMARIZE_WORKERS", "6")
@@ -58,6 +67,9 @@ def test_env_overrides_defaults(monkeypatch):
     assert settings.embedding_provider == "gemini"
     assert settings.embedding_model == "some-embedding"
     assert settings.persist_dir == "store"
+    assert settings.max_upload_mb == 7
+    assert settings.chat_timeout_s == 12.5
+    assert settings.summarize_timeout_s == 45.0
     assert settings.llm_timeout_s == 12.5
     assert settings.llm_max_retries == 5
     assert settings.summarize_workers == 6

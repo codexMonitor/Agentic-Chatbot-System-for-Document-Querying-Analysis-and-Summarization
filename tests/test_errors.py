@@ -10,7 +10,14 @@ from doc_agent.nodes._utils import LLM_UNAVAILABLE
 from doc_agent.nodes.summarize import make_summarize
 from doc_agent.services import Services
 from doc_agent.services.embeddings import GeminiEmbedder
-from doc_agent.services.errors import LLMError, call_with_retry, retry_after_from
+from doc_agent.services.errors import (
+    LLMError,
+    RequestDeadlineExceeded,
+    call_with_retry,
+    request_deadline,
+    retry_after_from,
+    set_request_intent,
+)
 from doc_agent.services.llm import FakeLLM, GeminiLLM
 from doc_agent.services.vectorstore import InMemoryVectorStore
 
@@ -190,6 +197,35 @@ def test_jitter_stays_within_a_quarter_of_the_backoff():
 def test_total_wait_for_one_call_is_bounded():
     sleeps = run_retry([QuotaError(retry_delay="3600s")] * 3)
     assert sum(sleeps) <= 3 * 60.0
+
+
+def test_retry_waits_stop_at_the_shared_request_deadline(monkeypatch):
+    now = [0.0]
+    monkeypatch.setattr("doc_agent.services.errors._monotonic", lambda: now[0])
+    calls = []
+    sleeps = []
+
+    def fail():
+        calls.append(None)
+        raise HttpError(503)
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        now[0] += seconds
+
+    with request_deadline(chat_timeout_s=1.5, summarize_timeout_s=5):
+        set_request_intent("qa")
+        with pytest.raises(RequestDeadlineExceeded):
+            call_with_retry(
+                fail,
+                max_retries=8,
+                what="test",
+                sleep=sleep,
+                jitter=lambda: 0.0,
+            )
+
+    assert calls == [None, None]
+    assert sleeps == [1.0, 0.5]
 
 
 def test_the_real_sdk_error_shape_is_understood():

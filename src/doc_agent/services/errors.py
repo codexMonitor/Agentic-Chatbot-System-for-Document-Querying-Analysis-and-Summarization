@@ -3,6 +3,9 @@ import random
 import re
 import time
 from collections.abc import Callable
+from contextlib import contextmanager
+from contextvars import ContextVar
+from dataclasses import dataclass
 from typing import Any, TypeVar
 
 T = TypeVar("T")
@@ -12,6 +15,21 @@ _MIN_SECRET_LENGTH = 6
 MAX_RETRY_WAIT_S = 60.0  # upper bound for one wait, whether it came from the server or the backoff
 _JITTER_FRACTION = 0.25
 _RETRY_IN_TEXT = re.compile(r"retry in ([0-9]+(?:\.[0-9]+)?)\s*s", re.IGNORECASE)
+_monotonic = time.monotonic
+
+
+@dataclass
+class _RequestBudget:
+    started_at: float
+    deadline: float
+    chat_timeout_s: float
+    summarize_timeout_s: float
+    intent: str | None = None
+
+
+_REQUEST_BUDGET: ContextVar[_RequestBudget | None] = ContextVar(
+    "doc_agent_request_budget", default=None
+)
 
 
 def mask_secrets(text: str) -> str:
@@ -39,8 +57,55 @@ class LLMError(Exception):
         self.retry_after_s = retry_after_s
 
 
+class RequestDeadlineExceeded(LLMError):
+    """An LLM call exceeded the shared deadline for a chat request."""
+
+    def __init__(self, intent: str | None) -> None:
+        super().__init__("The chat request exceeded its time limit.")
+        self.intent = intent
+
+
 class IndexMismatchError(Exception):
     """The stored vectors were built with a different embedding model than the configured one."""
+
+
+@contextmanager
+def request_deadline(chat_timeout_s: float, summarize_timeout_s: float):
+    started_at = _monotonic()
+    budget = _RequestBudget(
+        started_at=started_at,
+        deadline=started_at + chat_timeout_s,
+        chat_timeout_s=chat_timeout_s,
+        summarize_timeout_s=summarize_timeout_s,
+    )
+    token = _REQUEST_BUDGET.set(budget)
+    try:
+        yield
+    finally:
+        _REQUEST_BUDGET.reset(token)
+
+
+def set_request_intent(intent: str) -> None:
+    budget = _REQUEST_BUDGET.get()
+    if budget is None:
+        return
+    budget.intent = intent
+    timeout_s = budget.summarize_timeout_s if intent == "summarize" else budget.chat_timeout_s
+    budget.deadline = budget.started_at + timeout_s
+
+
+def request_remaining_s() -> float | None:
+    budget = _REQUEST_BUDGET.get()
+    if budget is None:
+        return None
+    return max(0.0, budget.deadline - _monotonic())
+
+
+def ensure_request_deadline() -> None:
+    remaining = request_remaining_s()
+    if remaining is not None and remaining <= 0:
+        budget = _REQUEST_BUDGET.get()
+        raise RequestDeadlineExceeded(budget.intent if budget is not None else None)
 
 
 def _is_retryable(error: Exception) -> bool:
@@ -117,13 +182,26 @@ def call_with_retry(
     """
     attempt = 0
     while True:
+        ensure_request_deadline()
         try:
-            return func()
+            result = func()
+            ensure_request_deadline()
+            return result
+        except RequestDeadlineExceeded:
+            raise
         except LLMError as error:
+            try:
+                ensure_request_deadline()
+            except RequestDeadlineExceeded as deadline_error:
+                raise deadline_error from error
             if not (error.retryable and attempt < max_retries):
                 raise
             retry_after_s = error.retry_after_s
         except Exception as error:
+            try:
+                ensure_request_deadline()
+            except RequestDeadlineExceeded as deadline_error:
+                raise deadline_error from error
             retryable = _is_retryable(error)
             retry_after_s = retry_after_from(error) if retryable else None
             if not (retryable and attempt < max_retries):
@@ -134,5 +212,11 @@ def call_with_retry(
                 ) from error
         # Resolved per call so tests can patch `time.sleep`.
         wait = _wait_s(attempt, retry_after_s, base_delay_s, jitter or random.random)
+        remaining = request_remaining_s()
+        if remaining is not None:
+            if remaining <= 0:
+                ensure_request_deadline()
+            wait = min(wait, remaining)
         (sleep or time.sleep)(wait)
+        ensure_request_deadline()
         attempt += 1
