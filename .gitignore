@@ -8,3 +8,4 @@ __pycache__/
 .doc_agent_data/
 test.py
 AGENTS.md
+.langgraph_api/
