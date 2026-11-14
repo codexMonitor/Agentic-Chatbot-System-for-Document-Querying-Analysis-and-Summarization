@@ -5,6 +5,7 @@ from doc_agent.config import Settings, load_settings
 ENV_VARS = [
     "DOC_AGENT_LLM_PROVIDER",
     "DOC_AGENT_LLM_MODEL",
+    "DOC_AGENT_ANTHROPIC_MODEL",
     "DOC_AGENT_EMBEDDING_PROVIDER",
     "DOC_AGENT_EMBEDDING_MODEL",
     "DOC_AGENT_VECTOR_STORE",
@@ -56,6 +57,7 @@ def test_defaults():
 def test_env_overrides_defaults(monkeypatch):
     monkeypatch.setenv("DOC_AGENT_LLM_PROVIDER", "gemini")
     monkeypatch.setenv("DOC_AGENT_LLM_MODEL", "some-model")
+    monkeypatch.setenv("DOC_AGENT_ANTHROPIC_MODEL", "claude-test")
     monkeypatch.setenv("DOC_AGENT_EMBEDDING_PROVIDER", "gemini")
     monkeypatch.setenv("DOC_AGENT_EMBEDDING_MODEL", "some-embedding")
     monkeypatch.setenv("DOC_AGENT_PERSIST_DIR", "store")
@@ -73,6 +75,7 @@ def test_env_overrides_defaults(monkeypatch):
     settings = load_settings()
     assert settings.llm_provider == "gemini"
     assert settings.llm_model == "some-model"
+    assert settings.anthropic_model == "claude-test"
     assert settings.embedding_provider == "gemini"
     assert settings.embedding_model == "some-embedding"
     assert settings.persist_dir == "store"

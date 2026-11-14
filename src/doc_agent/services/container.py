@@ -1,5 +1,6 @@
+import os
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TypeVar
 
 from doc_agent.config import Settings
@@ -31,6 +32,34 @@ def _lookup(registry: dict[str, T], name: str, kind: str) -> T:
 
 def _make_llm(settings: Settings) -> LLMService:
     return _lookup(LLM_PROVIDERS, settings.llm_provider, "LLM provider")(settings)
+
+
+def available_chat_providers(settings: Settings) -> list[dict[str, str]]:
+    providers = []
+    names = sorted(LLM_PROVIDERS, key=lambda name: (name != "gemini", name))
+    for name in names:
+        if name == "fake":
+            if settings.llm_provider == "fake":
+                providers.append({"provider": name, "model": ""})
+        elif os.environ.get(f"{name.upper()}_API_KEY", "").strip():
+            model = settings.anthropic_model if name == "anthropic" else settings.llm_model
+            providers.append({"provider": name, "model": model})
+    return providers
+
+
+def select_chat_settings(settings: Settings, provider: str | None, model: str | None) -> Settings:
+    selected = provider or settings.llm_provider
+    if selected not in LLM_PROVIDERS:
+        raise ValueError(f"Unknown provider '{selected}'.")
+    key_name = None if selected == "fake" else f"{selected.upper()}_API_KEY"
+    if key_name and not os.environ.get(key_name, "").strip():
+        raise ValueError(f"{selected} provider not configured: {key_name} is missing.")
+    if model is not None and not model.strip():
+        raise ValueError("model must not be empty")
+    changes = {"llm_provider": selected}
+    if model is not None:
+        changes["anthropic_model" if selected == "anthropic" else "llm_model"] = model
+    return replace(settings, **changes)
 
 
 def _make_embedder(settings: Settings) -> Embedder:

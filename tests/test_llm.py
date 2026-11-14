@@ -1,15 +1,19 @@
+import os
+
 import pytest
+from dotenv import dotenv_values
 
 from conftest import pytest_collection_modifyitems
 from doc_agent.config import Settings
 from doc_agent.services.container import _make_llm
 from doc_agent.services.errors import (
     LLMError,
+    ProviderAccessError,
     call_with_retry,
     request_deadline,
     set_request_intent,
 )
-from doc_agent.services.llm import LLM_PROVIDERS, FakeLLM, GeminiLLM
+from doc_agent.services.llm import LLM_PROVIDERS, AnthropicLLM, FakeLLM, GeminiLLM
 
 
 class RateLimitError(Exception):
@@ -141,3 +145,77 @@ def test_real_tests_are_skipped_by_default(monkeypatch):
 @pytest.mark.real
 def test_gemini_smoke(gemini_settings):
     assert GeminiLLM(gemini_settings).invoke("Say OK").strip()
+
+
+class AnthropicMessages:
+    def __init__(self, outcomes):
+        self.outcomes = list(outcomes)
+        self.calls = []
+
+    def create(self, **kwargs):
+        self.calls.append(kwargs)
+        outcome = self.outcomes.pop(0)
+        if isinstance(outcome, Exception):
+            raise outcome
+        block = type("Block", (), {"type": "text", "text": outcome})()
+        return type("Response", (), {"content": [block], "usage": None})()
+
+
+class AnthropicStub:
+    def __init__(self, outcomes):
+        self.messages = AnthropicMessages(outcomes)
+
+
+def test_anthropic_uses_messages_api_and_single_retry_layer(monkeypatch):
+    monkeypatch.setattr("doc_agent.services.errors.time.sleep", lambda seconds: None)
+    client = AnthropicStub([RateLimitError("slow down"), "OK"])
+    llm = AnthropicLLM(Settings(anthropic_model="test-claude"), client=client)
+    assert llm.invoke("Say OK") == "OK"
+    assert len(client.messages.calls) == 2
+    assert client.messages.calls[-1]["model"] == "test-claude"
+    assert client.messages.calls[-1]["messages"] == [{"role": "user", "content": "Say OK"}]
+
+
+@pytest.mark.parametrize(
+    ("status", "text", "expected"),
+    [(401, "bad key", "authentication"), (400, "credit balance is too low", "credit")],
+)
+def test_anthropic_access_errors_are_friendly_and_not_retried(status, text, expected):
+    class ProviderFailure(Exception):
+        status_code = status
+
+    client = AnthropicStub([ProviderFailure(text)])
+    llm = AnthropicLLM(Settings(), client=client)
+    with pytest.raises(ProviderAccessError, match=expected) as error:
+        llm.invoke("hello")
+    assert "switch" in str(error.value)
+    assert not error.value.retryable
+    assert len(client.messages.calls) == 1
+
+
+def test_anthropic_missing_key_is_optional(monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    with pytest.raises(LLMError, match="provider not configured"):
+        _make_llm(Settings(llm_provider="anthropic"))
+
+
+def test_gemini_authentication_error_suggests_switching():
+    class AuthenticationFailure(Exception):
+        code = 401
+
+    llm, client = make_llm([AuthenticationFailure("invalid key")])
+    with pytest.raises(ProviderAccessError, match="switch"):
+        llm.invoke("hello")
+    assert client.models.calls == 1
+
+
+@pytest.mark.real
+def test_anthropic_smoke(monkeypatch):
+    values = {**dotenv_values(".env"), **os.environ}
+    if not values.get("ANTHROPIC_API_KEY"):
+        pytest.skip("ANTHROPIC_API_KEY is not set")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", values["ANTHROPIC_API_KEY"])
+    settings = Settings(
+        anthropic_model=values.get("DOC_AGENT_ANTHROPIC_MODEL") or "claude-haiku-5-5"
+    )
+    assert AnthropicLLM(settings).invoke("Say OK").strip()

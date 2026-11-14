@@ -341,7 +341,7 @@ def test_api_key_is_masked_in_error_text_and_logs(monkeypatch, caplog):
     with caplog.at_level(logging.INFO):
         result = ask(make_graph(llm), "What is Scrum?")
     assert result["answer"] == LLM_UNAVAILABLE
-    assert "rejected" in caplog.text
+    assert "authentication failed" in caplog.text
     assert SECRET not in caplog.text
     assert SECRET not in str(LLMError(f"oops {SECRET}"))
     assert "***" in str(LLMError(f"oops {SECRET}"))

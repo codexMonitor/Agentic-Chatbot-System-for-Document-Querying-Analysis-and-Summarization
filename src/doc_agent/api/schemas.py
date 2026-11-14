@@ -17,6 +17,8 @@ class DeleteDocumentResponse(BaseModel):
 class ChatRequest(BaseModel):
     thread_id: str = Field(min_length=1)
     message: str = Field(min_length=1)
+    provider: str | None = None
+    model: str | None = None
 
     @field_validator("thread_id", "message")
     @classmethod
@@ -36,6 +38,17 @@ class ChatResponse(BaseModel):
     intent: str
     answer: str
     sources: list[SourceReference]
+    provider: str
+    model: str
+
+
+class ProviderInfo(BaseModel):
+    provider: str
+    model: str
+
+
+class ProviderListResponse(BaseModel):
+    providers: list[ProviderInfo]
 
 
 class HealthResponse(BaseModel):
@@ -55,6 +68,8 @@ class ThreadListResponse(BaseModel):
 class ThreadMessage(BaseModel):
     role: str
     content: str
+    provider: str | None = None
+    model: str | None = None
 
 
 class ThreadDetail(ThreadSummary):

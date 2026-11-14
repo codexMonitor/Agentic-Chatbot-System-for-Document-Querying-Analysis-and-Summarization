@@ -16,5 +16,6 @@
 | [0011](0011-langsmith-tracing-and-studio.md) | LangSmith tracing and LangGraph Studio | Accepted |
 | [0012](0012-evaluation-method.md) | Evaluation method | Accepted |
 | [0013](0013-supabase-pgvector.md) | Supabase pgvector | Accepted |
+| [0014](0014-chat-model-selection.md) | Per-request chat model selection | Accepted |
 
 Open decisions are listed in [proposed.md](proposed.md).

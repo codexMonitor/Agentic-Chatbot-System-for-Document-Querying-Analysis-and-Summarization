@@ -100,11 +100,45 @@ The embedded UI calls `DocAgentApp` in-process and uses the same document, chat,
 history interface as HTTP mode. Set `DOC_AGENT_MODE=embedded` in `.env` to start it with only
 `streamlit run src\doc_agent\ui\app.py`.
 
+### Chat model selection
+
+The sidebar lists configured chat providers and their default models, with Gemini first when
+available. For Claude, install the normal project dependencies and add `ANTHROPIC_API_KEY` to the
+server's `.env`. The key is optional; without it Claude is hidden and an explicit API request for
+it returns a provider-not-configured error. `DOC_AGENT_ANTHROPIC_MODEL` defaults to
+`claude-haiku-5-5`: **this name is unverified**; check it in the Anthropic Console before funding
+the account and override the setting if necessary. Authentication or credit failures suggest
+switching providers. Each answer records its provider and model, including in conversation history.
+
+`POST /chat` accepts optional `provider` and `model` fields; omitted values use the server settings.
+`GET /providers` lists available choices without revealing keys. Chat model selection does not change
+the embedding model, so switching chat providers does not require re-indexing.
+To use another model from an existing provider, set `DOC_AGENT_LLM_MODEL` for Gemini or
+`DOC_AGENT_ANTHROPIC_MODEL` for Anthropic, or pass `model` in a chat request.
+
+After running the Supabase SQL setup, you can run its isolated real contract tests once:
+
+```powershell
+$env:DOC_AGENT_RUN_REAL = "1"
+pytest -q tests\test_vectorstore_contract.py -m real -k supabase
+```
+
+After adding the Anthropic key and verifying the model name, run the Claude smoke test once:
+
+```powershell
+$env:DOC_AGENT_RUN_REAL = "1"
+pytest -q tests\test_llm.py::test_anthropic_smoke
+```
+
+Both commands make real provider calls. Supabase tests use a unique temporary collection and remove
+only that collection afterward. Reset `$env:DOC_AGENT_RUN_REAL = "0"` for offline checks.
+
 ## LangSmith tracing
 
 Tracing is off by default. To enable it, set `LANGSMITH_TRACING=true`, put your key in
 `LANGSMITH_API_KEY`, and choose `LANGSMITH_PROJECT` (defaults to `doc-agent`). LangGraph runs and
-Gemini chat and embedding calls then appear as traces with provider/model metadata and latency;
+Gemini and Anthropic chat calls and Gemini embedding calls then appear as traces with provider/model
+metadata and latency;
 token counts are included when the SDK response exposes them. Trace inputs and outputs are masked
 for configured API keys.
 
@@ -287,7 +321,8 @@ and [metric documentation](https://docs.ragas.io/en/stable/concepts/metrics/avai
   implements `invoke(prompt) -> str` and wraps provider exceptions with `call_with_retry` (they become
   `LLMError`, flagged `retryable` for rate limits and temporary server errors); add one entry to
   `LLM_PROVIDERS`; add the SDK to `pyproject.toml`; put its key variable
-  (placeholder only) in `.env.example`. Then set `DOC_AGENT_LLM_PROVIDER` and `DOC_AGENT_LLM_MODEL`. Nodes,
+  (placeholder only) in `.env.example`. The selector discovers keys named `<PROVIDER>_API_KEY`.
+  Then set `DOC_AGENT_LLM_PROVIDER` and `DOC_AGENT_LLM_MODEL`. Nodes,
   prompts and the graph do not change.
 - **New embedding provider:** add an adapter implementing `embed(texts)` and one entry in `EMBEDDERS`
   (`services/embeddings.py`). Existing stores must be re-ingested.

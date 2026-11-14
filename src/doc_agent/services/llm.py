@@ -1,3 +1,4 @@
+import os
 import re
 from collections.abc import Callable
 from typing import Any
@@ -9,6 +10,7 @@ from doc_agent.services._gemini import make_gemini_client
 from doc_agent.services.base import LLMService
 from doc_agent.services.errors import (
     LLMError,
+    ProviderAccessError,
     call_with_retry,
     mask_secrets,
     request_remaining_s,
@@ -73,6 +75,18 @@ def _trace_chat_output(response: Any) -> dict:
     return output
 
 
+def _raise_access_error(error: Exception, provider: str) -> None:
+    status = getattr(error, "status_code", None) or getattr(error, "code", None)
+    if status in (401, 403):
+        raise ProviderAccessError(
+            f"{provider} authentication failed. Check its key or switch to another provider."
+        ) from error
+    if status == 402 or (status == 400 and "credit balance" in str(error).lower()):
+        raise ProviderAccessError(
+            f"{provider} credit is unavailable. Check billing or switch to another provider."
+        ) from error
+
+
 class FakeLLM:
     """Deterministic offline LLM driven by the `### TASK: <name>` header."""
 
@@ -130,17 +144,23 @@ class GeminiLLM:
 
     def _generate_content(self, prompt: str) -> Any:
         def generate() -> Any:
-            remaining_s = request_remaining_s()
-            if remaining_s is None:
-                return self._client.models.generate_content(model=self._model, contents=prompt)
+            try:
+                remaining_s = request_remaining_s()
+                if remaining_s is None:
+                    return self._client.models.generate_content(model=self._model, contents=prompt)
 
-            from google.genai import types
+                from google.genai import types
 
-            timeout_ms = max(1, int(min(self._timeout_s, remaining_s) * 1000))
-            config = types.GenerateContentConfig(http_options=types.HttpOptions(timeout=timeout_ms))
-            return self._client.models.generate_content(
-                model=self._model, contents=prompt, config=config
-            )
+                timeout_ms = max(1, int(min(self._timeout_s, remaining_s) * 1000))
+                config = types.GenerateContentConfig(
+                    http_options=types.HttpOptions(timeout=timeout_ms)
+                )
+                return self._client.models.generate_content(
+                    model=self._model, contents=prompt, config=config
+                )
+            except Exception as error:
+                _raise_access_error(error, "Gemini")
+                raise
 
         return call_with_retry(
             generate,
@@ -149,7 +169,77 @@ class GeminiLLM:
         )
 
 
+class AnthropicLLM:
+    """Anthropic Messages API with the shared provider retry layer."""
+
+    def __init__(self, settings: Settings, client: Any = None) -> None:
+        if not settings.anthropic_model:
+            raise LLMError("DOC_AGENT_ANTHROPIC_MODEL is not set.")
+        if client is None:
+            key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+            if not key:
+                raise LLMError("Anthropic provider not configured: ANTHROPIC_API_KEY is missing.")
+            from anthropic import Anthropic
+
+            client = Anthropic(api_key=key, timeout=settings.llm_timeout_s, max_retries=0)
+        self._client = client
+        self._model = settings.anthropic_model
+        self._timeout_s = settings.llm_timeout_s
+        self._max_retries = settings.llm_max_retries
+        self._traced_generate = traceable(
+            self._generate,
+            run_type="llm",
+            name="Anthropic chat",
+            metadata={"ls_provider": "anthropic", "ls_model_name": self._model},
+            process_inputs=_trace_inputs,
+            process_outputs=self._trace_output,
+            exceptions_to_handle=(LLMError,),
+        )
+
+    @staticmethod
+    def _text(response: Any) -> str:
+        return "".join(block.text for block in response.content if block.type == "text")
+
+    @classmethod
+    def _trace_output(cls, response: Any) -> dict:
+        output = {"messages": [{"role": "assistant", "content": mask_secrets(cls._text(response))}]}
+        usage = getattr(response, "usage", None)
+        if usage is not None:
+            output["usage_metadata"] = {
+                "input_tokens": usage.input_tokens,
+                "output_tokens": usage.output_tokens,
+            }
+        return output
+
+    def invoke(self, prompt: str) -> str:
+        response = self._traced_generate(prompt)
+        text = self._text(response)
+        if not text:
+            raise LLMError(f"Anthropic model '{self._model}' returned an empty response.")
+        return text
+
+    def _generate(self, prompt: str) -> Any:
+        def generate() -> Any:
+            remaining = request_remaining_s()
+            timeout = self._timeout_s if remaining is None else min(self._timeout_s, remaining)
+            try:
+                return self._client.messages.create(
+                    model=self._model,
+                    max_tokens=1024,
+                    messages=[{"role": "user", "content": prompt}],
+                    timeout=max(0.001, timeout),
+                )
+            except Exception as error:
+                _raise_access_error(error, "Anthropic")
+                raise
+
+        return call_with_retry(
+            generate, max_retries=self._max_retries, what=f"Anthropic model '{self._model}'"
+        )
+
+
 LLM_PROVIDERS: dict[str, Callable[[Settings], LLMService]] = {
     "fake": lambda settings: FakeLLM(),
     "gemini": GeminiLLM,
+    "anthropic": AnthropicLLM,
 }
