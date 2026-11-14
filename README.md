@@ -47,10 +47,11 @@ Install the optional UI dependencies:
 pip install -e ".[ui]"
 ```
 
-The UI shows conversation history backed by the API checkpointer. It sends documents and questions to
-the configured LLM provider; use public documents only. The HTTP client timeout defaults to 660
-seconds and must be longer than `DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it
-with `DOC_AGENT_UI_TIMEOUT_S` if you change the server's summarize budget.
+The UI shows conversation history backed by the API checkpointer. Documents and questions are sent
+to the configured LLM provider; review its data-handling policy before uploading sensitive material.
+The HTTP client timeout defaults to 660 seconds and must be longer than
+`DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it with `DOC_AGENT_UI_TIMEOUT_S` if
+you change the server's summarize budget.
 
 **API mode (two terminals).** In the first terminal, start FastAPI:
 

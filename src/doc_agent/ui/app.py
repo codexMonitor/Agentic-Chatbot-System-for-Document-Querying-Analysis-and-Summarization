@@ -202,10 +202,6 @@ def main(client: Client | None = None) -> None:
 
     st.set_page_config(page_title="Document assistant", page_icon="📚")
     st.title("Document assistant")
-    st.warning(
-        "Documents and questions are sent to the configured LLM provider. "
-        "Please use public documents only."
-    )
 
     if client is None and "_doc_agent_client" not in st.session_state:
         try:

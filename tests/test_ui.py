@@ -157,4 +157,4 @@ def test_embedded_ui_starts_with_fake_services(tmp_path, monkeypatch):
 
     assert not app.exception
     assert app.title[0].value == "Document assistant"
-    assert any("public documents only" in item.value for item in app.warning)
+    assert not any("configured LLM provider" in item.value for item in app.warning)
