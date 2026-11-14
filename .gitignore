@@ -10,3 +10,6 @@ test.py
 AGENTS.md
 .langgraph_api/
 eval/docs/
+.streamlit/secrets.toml
+.env.*
+!.env.example
