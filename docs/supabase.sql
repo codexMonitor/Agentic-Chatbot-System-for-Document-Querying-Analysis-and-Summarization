@@ -66,7 +66,7 @@ $$;
 
 create or replace function public.doc_agent_match_chunks(
     collection_name text, query_embedding extensions.vector, match_count integer
-) returns table (source text, position integer, text text)
+) returns table (source text, "position" integer, text text)
 language sql stable as $$
     select c.source, c.position, c.text
     from public.doc_agent_chunks as c
