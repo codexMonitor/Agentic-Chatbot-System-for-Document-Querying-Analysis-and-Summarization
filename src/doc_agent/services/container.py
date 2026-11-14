@@ -6,7 +6,11 @@ from doc_agent.config import Settings
 from doc_agent.services.base import Embedder, LLMService, VectorStore
 from doc_agent.services.embeddings import EMBEDDERS
 from doc_agent.services.llm import LLM_PROVIDERS
-from doc_agent.services.vectorstore import ChromaVectorStore, InMemoryVectorStore
+from doc_agent.services.vectorstore import (
+    ChromaVectorStore,
+    InMemoryVectorStore,
+    SupabaseVectorStore,
+)
 
 T = TypeVar("T")
 
@@ -38,9 +42,15 @@ def _make_chroma(settings: Settings) -> VectorStore:
     return ChromaVectorStore(settings.persist_dir, _make_embedder(settings), embedder_id)
 
 
+def _make_supabase(settings: Settings) -> VectorStore:
+    embedder_id = f"{settings.embedding_provider}:{settings.embedding_model}"
+    return SupabaseVectorStore(_make_embedder(settings), embedder_id)
+
+
 VECTOR_STORES: dict[str, Callable[[Settings], VectorStore]] = {
     "memory": lambda settings: InMemoryVectorStore(),
     "chroma": _make_chroma,
+    "supabase": _make_supabase,
 }
 
 

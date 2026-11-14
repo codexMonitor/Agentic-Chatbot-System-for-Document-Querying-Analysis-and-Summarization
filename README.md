@@ -39,6 +39,25 @@ stored under `DOC_AGENT_PERSIST_DIR` together with the name of the embedding mod
 incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. Free-tier
 Gemini data may be used by Google for training, so use only public or sample documents.
 
+### Supabase pgvector (optional)
+
+In the Supabase SQL editor, run the entire [setup script](docs/supabase.sql), including its
+`create extension` statement. It creates private tables, enables RLS, restricts access to the
+server-side `service_role`, and creates the similarity-search functions. Set `SUPABASE_URL`,
+`SUPABASE_API_KEY` (the Supabase **secret** key, not the publishable key), and
+`DOC_AGENT_VECTOR_STORE=supabase` in the server's `.env`. Never put the secret key in browser code.
+Supabase secret keys bypass RLS; this local application has no user authentication or isolation.
+Use only a trusted local server and do not expose it publicly.
+
+The script uses `vector(3072)`, matching the default output of `gemini-embedding-001`; other
+embedders must produce exactly 3072 dimensions or the schema must be changed before ingestion.
+No embedding dimensions are changed by the application. pgvector's full-precision HNSW and IVFFlat
+indexes support at most 2000 dimensions, so this script uses exact cosine search without a vector
+index, suitable for a few thousand chunks. The primary key is a normal metadata index.
+The store records the embedding provider and model. To switch them, delete the collection's rows
+from `doc_agent_chunks`, then its row from `doc_agent_collections` in the SQL editor, and re-ingest.
+This deletion permanently removes the selected collection's vectors.
+
 ## Browser UI
 
 Install the optional UI dependencies:

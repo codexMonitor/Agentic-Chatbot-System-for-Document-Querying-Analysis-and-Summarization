@@ -1,11 +1,19 @@
+import os
+from uuid import uuid4
+
 import pytest
+from dotenv import dotenv_values
 
 from doc_agent.config import Settings
 from doc_agent.services.base import Chunk
 from doc_agent.services.container import _make_embedder, _make_store
 from doc_agent.services.embeddings import FakeEmbedder, GeminiEmbedder
 from doc_agent.services.errors import IndexMismatchError, LLMError
-from doc_agent.services.vectorstore import ChromaVectorStore, InMemoryVectorStore
+from doc_agent.services.vectorstore import (
+    ChromaVectorStore,
+    InMemoryVectorStore,
+    SupabaseVectorStore,
+)
 
 CORPUS = [
     "LangGraph builds stateful agent workflows from nodes and conditional edges.",
@@ -14,11 +22,35 @@ CORPUS = [
 ]
 
 
-@pytest.fixture(params=["memory", "chroma"])
-def store(request, tmp_path):
+@pytest.fixture(params=["memory", "chroma", pytest.param("supabase", marks=pytest.mark.real)])
+def store(request, tmp_path, monkeypatch):
     if request.param == "memory":
         return InMemoryVectorStore()
-    return ChromaVectorStore(str(tmp_path / "chroma"), FakeEmbedder(), "fake:")
+    if request.param == "chroma":
+        return ChromaVectorStore(str(tmp_path / "chroma"), FakeEmbedder(), "fake:")
+    values = {**dotenv_values(".env"), **os.environ}
+    for name in ("SUPABASE_URL", "SUPABASE_API_KEY"):
+        if not values.get(name):
+            pytest.skip(f"{name} is not set")
+        monkeypatch.setenv(name, values[name])
+    collection = f"contract-{uuid4().hex}"
+    store = SupabaseVectorStore(
+        FakeEmbedder(dimensions=3072), "fake:contract", collection=collection
+    )
+    request.addfinalizer(
+        lambda: (
+            store._client.table("doc_agent_collections")
+            .delete()
+            .eq("collection", collection)
+            .execute()
+        )
+    )
+    request.addfinalizer(
+        lambda: (
+            store._client.table("doc_agent_chunks").delete().eq("collection", collection).execute()
+        )
+    )
+    return store
 
 
 def test_search_finds_the_relevant_chunk(store):
@@ -87,6 +119,43 @@ def test_reindex_guard_rejects_a_different_embedder(tmp_path):
     ChromaVectorStore(path, FakeEmbedder(), "fake:model-a").add("a.txt", CORPUS)
     with pytest.raises(IndexMismatchError, match="re-ingest"):
         ChromaVectorStore(path, FakeEmbedder(), "fake:model-b")
+
+
+class SupabaseStub:
+    def __init__(self, recorded="fake:model-a"):
+        self.recorded = recorded
+        self.calls = []
+
+    def rpc(self, name, params):
+        self.calls.append((name, params))
+        return self
+
+    def execute(self):
+        return type("Response", (), {"data": self.recorded})()
+
+
+def test_supabase_reindex_guard_rejects_different_embedder():
+    with pytest.raises(IndexMismatchError, match="re-ingest"):
+        SupabaseVectorStore(FakeEmbedder(), "fake:model-b", client=SupabaseStub())
+
+
+def test_supabase_replacement_embeds_before_the_atomic_rpc():
+    client = SupabaseStub()
+    store = SupabaseVectorStore(FakeEmbedder(), "fake:model-a", client=client)
+    store.add("a.txt", ["one", "two"])
+    name, params = client.calls[-1]
+    assert name == "doc_agent_replace_source"
+    assert params["configured_embedder"] == "fake:model-a"
+    assert params["source_name"] == "a.txt"
+    assert [row["text"] for row in params["chunks"]] == ["one", "two"]
+    assert len(params["chunks"][0]["embedding"]) == 64
+
+
+def test_supabase_requires_configuration(monkeypatch):
+    monkeypatch.delenv("SUPABASE_URL", raising=False)
+    monkeypatch.delenv("SUPABASE_API_KEY", raising=False)
+    with pytest.raises(ValueError, match="SUPABASE_URL and SUPABASE_API_KEY"):
+        SupabaseVectorStore(FakeEmbedder(), "fake:")
 
 
 def test_container_builds_chroma_with_fake_embedder(tmp_path):
