@@ -9,7 +9,7 @@ from urllib.parse import quote, urlsplit
 
 import httpx
 
-from doc_agent.app_service import DocAgentApp
+from doc_agent.app_service import DocAgentApp, ProviderRequestError
 from doc_agent.config import Settings, load_settings
 from doc_agent.services import build_services
 from doc_agent.services.errors import LLMError
@@ -26,7 +26,11 @@ class Client(Protocol):
 
     def delete_document(self, source: str) -> int: ...
 
-    def chat(self, thread_id: str, message: str) -> dict[str, Any]: ...
+    def chat(
+        self, thread_id: str, message: str, provider: str | None = None, model: str | None = None
+    ) -> dict[str, Any]: ...
+
+    def list_providers(self) -> list[dict[str, str]]: ...
 
     def list_threads(self) -> list[dict[str, Any]]: ...
 
@@ -111,8 +115,18 @@ class HTTPClient:
         result = self._request("DELETE", f"/documents/{quote(source, safe='')}")
         return result["removed"]
 
-    def chat(self, thread_id: str, message: str) -> dict[str, Any]:
-        return self._request("POST", "/chat", json={"thread_id": thread_id, "message": message})
+    def chat(
+        self, thread_id: str, message: str, provider: str | None = None, model: str | None = None
+    ) -> dict[str, Any]:
+        payload = {"thread_id": thread_id, "message": message}
+        if provider is not None:
+            payload["provider"] = provider
+        if model is not None:
+            payload["model"] = model
+        return self._request("POST", "/chat", json=payload)
+
+    def list_providers(self) -> list[dict[str, str]]:
+        return self._request("GET", "/providers")["providers"]
 
     def list_threads(self) -> list[dict[str, Any]]:
         return self._request("GET", "/threads")["threads"]
@@ -131,7 +145,7 @@ class InProcessClient:
     def _call(self, operation: Callable[..., Any], *args: Any) -> Any:
         try:
             return operation(*args)
-        except ValueError as error:
+        except (ValueError, ProviderRequestError) as error:
             raise UIClientError(str(error)) from error
 
     def upload_document(self, filename: str, content: bytes) -> dict[str, Any]:
@@ -143,8 +157,15 @@ class InProcessClient:
     def delete_document(self, source: str) -> int:
         return self._app.delete_document(source)
 
-    def chat(self, thread_id: str, message: str) -> dict[str, Any]:
-        return self._call(self._app.chat, thread_id, message)
+    def chat(
+        self, thread_id: str, message: str, provider: str | None = None, model: str | None = None
+    ) -> dict[str, Any]:
+        if provider is None and model is None:
+            return self._call(self._app.chat, thread_id, message)
+        return self._call(self._app.chat, thread_id, message, provider, model)
+
+    def list_providers(self) -> list[dict[str, str]]:
+        return self._call(self._app.list_providers)
 
     def list_threads(self) -> list[dict[str, Any]]:
         return self._app.list_threads()
@@ -177,6 +198,8 @@ def _show_message(st: Any, message: dict[str, Any]) -> None:
             st.warning(message["content"])
         else:
             st.markdown(message["content"])
+        if role == "assistant" and message.get("provider"):
+            st.caption(f"Model: {message['provider']} / {message.get('model') or 'default'}")
         sources = message.get("sources") or []
         if sources:
             with st.expander("Sources"):
@@ -218,6 +241,26 @@ def main(client: Client | None = None) -> None:
         st.session_state["chat_messages"] = []
 
     with st.sidebar:
+        st.header("Model")
+        try:
+            providers = client.list_providers()
+        except UIClientError as error:
+            st.error(str(error))
+            providers = []
+        if providers:
+            selected_provider = st.selectbox(
+                "Chat provider",
+                options=[item["provider"] for item in providers],
+                format_func=lambda name: next(
+                    f"{item['provider']} / {item['model'] or 'default'}"
+                    for item in providers
+                    if item["provider"] == name
+                ),
+            )
+        else:
+            selected_provider = None
+            st.warning("No chat provider is configured.")
+        st.divider()
         st.header("Conversations")
         if st.button("New conversation", use_container_width=True):
             st.session_state["active_thread_id"] = str(uuid.uuid4())
@@ -251,6 +294,8 @@ def main(client: Client | None = None) -> None:
                             "role": message["role"],
                             "content": message["content"],
                             "sources": message.get("sources", []),
+                            "provider": message.get("provider"),
+                            "model": message.get("model"),
                         }
                         for message in opened["messages"]
                     ]
@@ -311,14 +356,16 @@ def main(client: Client | None = None) -> None:
     for message in st.session_state["chat_messages"]:
         _show_message(st, message)
 
-    prompt = st.chat_input("Ask a question about your documents")
+    prompt = st.chat_input("Ask a question about your documents", disabled=not providers)
     if prompt:
         user_message = {"role": "user", "content": prompt}
         st.session_state["chat_messages"].append(user_message)
         _show_message(st, user_message)
         with st.spinner("Thinking... This may take several minutes for a summary."):
             try:
-                result = client.chat(st.session_state["active_thread_id"], prompt)
+                result = client.chat(
+                    st.session_state["active_thread_id"], prompt, selected_provider
+                )
             except UIClientError as error:
                 st.error(str(error))
             else:
@@ -327,6 +374,8 @@ def main(client: Client | None = None) -> None:
                     "role": "assistant",
                     "content": answer,
                     "sources": result.get("sources", []),
+                    "provider": result.get("provider"),
+                    "model": result.get("model"),
                     "is_error": answer.startswith(
                         (
                             "The language model is unavailable.",

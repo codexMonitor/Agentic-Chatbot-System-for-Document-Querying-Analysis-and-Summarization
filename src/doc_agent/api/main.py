@@ -12,6 +12,7 @@ from doc_agent.api.schemas import (
     DeleteThreadResponse,
     DocumentListResponse,
     HealthResponse,
+    ProviderListResponse,
     ThreadDetail,
     ThreadListResponse,
     UploadDocumentResponse,
@@ -19,6 +20,7 @@ from doc_agent.api.schemas import (
 from doc_agent.app_service import (
     DocAgentApp,
     DocumentTooLargeError,
+    ProviderRequestError,
     UnsupportedDocumentTypeError,
 )
 from doc_agent.config import Settings, load_settings
@@ -79,7 +81,18 @@ def create_app(services: Services | None = None, settings: Settings | None = Non
 
     @app.post("/chat", response_model=ChatResponse)
     def chat(request: ChatRequest, service: Annotated[DocAgentApp, Depends(get_doc_agent)]) -> dict:
-        return service.chat(request.thread_id, request.message)
+        try:
+            return service.chat(request.thread_id, request.message, request.provider, request.model)
+        except ProviderRequestError as error:
+            raise HTTPException(status_code=403, detail=str(error)) from error
+        except ValueError as error:
+            raise HTTPException(status_code=400, detail=str(error)) from error
+
+    @app.get("/providers", response_model=ProviderListResponse)
+    def list_providers(
+        service: Annotated[DocAgentApp, Depends(get_doc_agent)],
+    ) -> dict[str, list[dict[str, str]]]:
+        return {"providers": service.list_providers()}
 
     @app.get("/threads", response_model=ThreadListResponse)
     def list_threads(

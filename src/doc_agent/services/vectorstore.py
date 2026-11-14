@@ -1,4 +1,6 @@
+import os
 import re
+from typing import Any
 
 from doc_agent.services.base import Chunk, Embedder
 from doc_agent.services.errors import IndexMismatchError
@@ -119,3 +121,111 @@ class ChromaVectorStore:
     def sources(self) -> list[str]:
         result = self._collection.get(include=["metadatas"])
         return sorted({str(metadata["source"]) for metadata in result["metadatas"]})
+
+
+class SupabaseVectorStore:
+    """Server-side pgvector store; collection metadata guards against mixing embeddings."""
+
+    def __init__(
+        self,
+        embedder: Embedder,
+        embedder_id: str,
+        *,
+        client: Any = None,
+        collection: str = "doc_agent",
+    ) -> None:
+        if client is None:
+            url = os.environ.get("SUPABASE_URL")
+            key = os.environ.get("SUPABASE_API_KEY")
+            if not url or not key:
+                raise ValueError("SUPABASE_URL and SUPABASE_API_KEY must be configured.")
+            from supabase import create_client
+
+            client = create_client(url, key)
+        self._client = client
+        self._embedder = embedder
+        self._embedder_id = embedder_id
+        self._collection = collection
+        recorded = (
+            self._client.rpc(
+                "doc_agent_init_collection",
+                {"collection_name": collection, "configured_embedder": embedder_id},
+            )
+            .execute()
+            .data
+        )
+        if recorded != embedder_id:
+            raise IndexMismatchError(
+                f"The Supabase collection was built with embedder '{recorded}', but "
+                f"'{embedder_id}' is configured. The stored vectors are incompatible: "
+                "clear the collection and re-ingest your documents, or restore the previous "
+                "DOC_AGENT_EMBEDDING_PROVIDER / DOC_AGENT_EMBEDDING_MODEL."
+            )
+
+    def add(self, source: str, chunks: list[str]) -> None:
+        embeddings = self._embedder.embed(chunks) if chunks else []
+        if len(embeddings) != len(chunks):
+            raise ValueError("The embedder returned a different number of vectors than chunks.")
+        rows = [
+            {"text": text, "embedding": embedding}
+            for text, embedding in zip(chunks, embeddings, strict=True)
+        ]
+        self._client.rpc(
+            "doc_agent_replace_source",
+            {
+                "collection_name": self._collection,
+                "configured_embedder": self._embedder_id,
+                "source_name": source,
+                "chunks": rows,
+            },
+        ).execute()
+
+    def delete(self, source: str) -> int:
+        return int(
+            self._client.rpc(
+                "doc_agent_delete_source",
+                {"collection_name": self._collection, "source_name": source},
+            )
+            .execute()
+            .data
+        )
+
+    def search(self, query: str, k: int = 4) -> list[Chunk]:
+        if k <= 0:
+            return []
+        rows = (
+            self._client.rpc(
+                "doc_agent_match_chunks",
+                {
+                    "collection_name": self._collection,
+                    "query_embedding": self._embedder.embed([query])[0],
+                    "match_count": k,
+                },
+            )
+            .execute()
+            .data
+        )
+        return [Chunk(row["text"], row["source"], row["position"]) for row in rows]
+
+    def all_chunks(self) -> list[Chunk]:
+        chunks: list[Chunk] = []
+        page_size = 1000
+        offset = 0
+        while True:
+            rows = (
+                self._client.table("doc_agent_chunks")
+                .select("text,source,position")
+                .eq("collection", self._collection)
+                .order("source")
+                .order("position")
+                .range(offset, offset + page_size - 1)
+                .execute()
+                .data
+            )
+            chunks.extend(Chunk(row["text"], row["source"], row["position"]) for row in rows)
+            if len(rows) < page_size:
+                return chunks
+            offset += len(rows)
+
+    def sources(self) -> list[str]:
+        return sorted({chunk.source for chunk in self.all_chunks()})

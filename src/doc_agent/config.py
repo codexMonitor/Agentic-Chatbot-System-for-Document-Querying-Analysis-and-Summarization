@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 class Settings:
     llm_provider: str = "fake"
     llm_model: str = ""
+    anthropic_model: str = "claude-haiku-5-5"
     embedding_provider: str = "fake"
     embedding_model: str = ""
     vector_store: str = "memory"
@@ -50,6 +51,7 @@ def load_settings() -> Settings:
     return Settings(
         llm_provider=env.get("DOC_AGENT_LLM_PROVIDER", defaults.llm_provider),
         llm_model=env.get("DOC_AGENT_LLM_MODEL", defaults.llm_model),
+        anthropic_model=env.get("DOC_AGENT_ANTHROPIC_MODEL", defaults.anthropic_model),
         embedding_provider=env.get("DOC_AGENT_EMBEDDING_PROVIDER", defaults.embedding_provider),
         embedding_model=env.get("DOC_AGENT_EMBEDDING_MODEL", defaults.embedding_model),
         vector_store=env.get("DOC_AGENT_VECTOR_STORE", defaults.vector_store),

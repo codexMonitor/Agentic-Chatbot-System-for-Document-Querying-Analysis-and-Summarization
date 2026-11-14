@@ -40,6 +40,8 @@ def test_health_upload_list_chat_and_delete(tmp_path):
             "answer": "[fake-llm:qa] Context: [1] (notes.txt#0) Scrum organizes work into sprints. "
             "Question: What is Scrum?",
             "sources": [{"n": 1, "source": "notes.txt", "position": 0}],
+            "provider": "fake",
+            "model": "",
         }
 
         deleted = client.delete("/documents/notes.txt")
@@ -196,3 +198,71 @@ def test_chat_deadline_is_shared_across_llm_calls(tmp_path, monkeypatch):
 
     assert response.status_code == 200
     assert response.json()["answer"] == "The language model is unavailable. Please try again."
+
+
+def test_provider_selection_and_history_use_per_request_models(tmp_path, monkeypatch):
+    from doc_agent.services.llm import LLM_PROVIDERS
+
+    calls = []
+
+    class SelectedLLM(FakeLLM):
+        def __init__(self, settings):
+            self.model = settings.anthropic_model
+
+        def invoke(self, prompt):
+            calls.append(self.model)
+            return super().invoke(prompt)
+
+    monkeypatch.setenv("GEMINI_API_KEY", "test-gemini-key")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "test-anthropic-key")
+    monkeypatch.setitem(LLM_PROVIDERS, "anthropic", SelectedLLM)
+    with _client(tmp_path) as client:
+        providers = client.get("/providers").json()["providers"]
+        assert [item["provider"] for item in providers] == ["gemini", "anthropic", "fake"]
+        response = client.post(
+            "/chat",
+            json={
+                "thread_id": "models",
+                "message": "Hello",
+                "provider": "anthropic",
+                "model": "claude-test",
+            },
+        )
+        assert response.status_code == 200
+        assert response.json()["provider"] == "anthropic"
+        assert response.json()["model"] == "claude-test"
+        assert calls and set(calls) == {"claude-test"}
+        default = client.post("/chat", json={"thread_id": "models", "message": "Thanks"})
+        assert default.json()["provider"] == "fake"
+        history = client.get("/threads/models").json()["messages"]
+        assert [
+            (item["provider"], item["model"]) for item in history if item["role"] == "assistant"
+        ] == [
+            ("anthropic", "claude-test"),
+            ("fake", ""),
+        ]
+
+
+def test_missing_provider_is_hidden_and_explicit_selection_is_rejected(tmp_path, monkeypatch):
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    with _client(tmp_path) as client:
+        assert client.get("/providers").json() == {"providers": [{"provider": "fake", "model": ""}]}
+        response = client.post(
+            "/chat", json={"thread_id": "t", "message": "Hello", "provider": "anthropic"}
+        )
+    assert response.status_code == 400
+    assert "provider not configured" in response.json()["detail"]
+
+
+def test_provider_access_failure_suggests_switching(tmp_path):
+    from doc_agent.services.errors import ProviderAccessError
+
+    class DeniedLLM:
+        def invoke(self, prompt):
+            raise ProviderAccessError("Authentication failed. Switch to another provider.")
+
+    with _client(tmp_path, llm=DeniedLLM()) as client:
+        response = client.post("/chat", json={"thread_id": "t", "message": "Hello"})
+    assert response.status_code == 403
+    assert "Switch to another provider" in response.json()["detail"]

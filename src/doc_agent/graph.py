@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 
+from langchain_core.messages import AIMessage
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.serde.jsonplus import JsonPlusSerializer
@@ -63,7 +64,31 @@ def build_graph(
     graph = StateGraph(AgentState)
 
     def add_node(name: str, run) -> None:
-        graph.add_node(name, timed(name, run))
+        def with_model_metadata(state):
+            result = run(state)
+            if "messages" in result:
+                model = (
+                    settings.anthropic_model
+                    if settings.llm_provider == "anthropic"
+                    else settings.llm_model
+                )
+                result["messages"] = [
+                    message.model_copy(
+                        update={
+                            "additional_kwargs": {
+                                **message.additional_kwargs,
+                                "provider": settings.llm_provider,
+                                "model": model,
+                            }
+                        }
+                    )
+                    if isinstance(message, AIMessage)
+                    else message
+                    for message in result["messages"]
+                ]
+            return result
+
+        graph.add_node(name, timed(name, with_model_metadata))
 
     add_node("rewrite", make_rewrite(services.llm, history_turns=settings.rewrite_history_turns))
     add_node("router", make_router(services.llm))

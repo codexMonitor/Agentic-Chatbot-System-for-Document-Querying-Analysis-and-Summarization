@@ -57,6 +57,10 @@ class LLMError(Exception):
         self.retry_after_s = retry_after_s
 
 
+class ProviderAccessError(LLMError):
+    """Authentication or billing prevents a provider from serving the request."""
+
+
 class RequestDeadlineExceeded(LLMError):
     """An LLM call exceeded the shared deadline for a chat request."""
 

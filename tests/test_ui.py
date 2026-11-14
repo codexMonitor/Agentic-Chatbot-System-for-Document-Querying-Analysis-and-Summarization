@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import httpx
@@ -90,6 +91,36 @@ def test_http_client_maps_chat_and_thread_operations():
     assert client.delete_thread("thread-1")
 
 
+def test_http_client_lists_providers_and_sends_model_choice():
+    def respond(request):
+        if request.url.path == "/providers":
+            return httpx.Response(
+                200, json={"providers": [{"provider": "gemini", "model": "gemini-test"}]}
+            )
+        assert json.loads(request.content) == {
+            "thread_id": "thread",
+            "message": "Hello",
+            "provider": "anthropic",
+            "model": "claude-test",
+        }
+        return httpx.Response(200, json={"answer": "Hello", "provider": "anthropic"})
+
+    client = HTTPClient("http://localhost:8000", 660, transport=httpx.MockTransport(respond))
+    assert client.list_providers() == [{"provider": "gemini", "model": "gemini-test"}]
+    assert client.chat("thread", "Hello", "anthropic", "claude-test")["provider"] == "anthropic"
+
+
+def test_http_client_shows_provider_access_error():
+    def respond(request):
+        return httpx.Response(
+            403, json={"detail": "Authentication failed. Switch to another provider."}
+        )
+
+    client = HTTPClient("http://localhost:8000", 660, transport=httpx.MockTransport(respond))
+    with pytest.raises(UIClientError, match="Switch to another provider"):
+        client.chat("thread", "Hello", "anthropic")
+
+
 def test_http_client_encodes_document_names_and_maps_timeout():
     seen_requests = []
 
@@ -146,6 +177,8 @@ def test_embedded_ui_starts_with_fake_services(tmp_path, monkeypatch):
         "DOC_AGENT_VECTOR_STORE",
         "DOC_AGENT_PERSIST_DIR",
         "DOC_AGENT_CHECKPOINT_DB",
+        "GEMINI_API_KEY",
+        "ANTHROPIC_API_KEY",
     ):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("DOC_AGENT_MODE", "embedded")
@@ -157,4 +190,5 @@ def test_embedded_ui_starts_with_fake_services(tmp_path, monkeypatch):
 
     assert not app.exception
     assert app.title[0].value == "Document assistant"
+    assert app.selectbox[0].value == "fake"
     assert not any("configured LLM provider" in item.value for item in app.warning)

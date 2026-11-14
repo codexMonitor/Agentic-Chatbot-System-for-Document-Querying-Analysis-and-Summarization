@@ -6,8 +6,14 @@ from langchain_core.messages import AIMessage, HumanMessage
 from doc_agent.config import Settings
 from doc_agent.graph import build_graph
 from doc_agent.services.base import LLMService
-from doc_agent.services.container import Services
+from doc_agent.services.container import (
+    Services,
+    _make_llm,
+    available_chat_providers,
+    select_chat_settings,
+)
 from doc_agent.services.errors import (
+    ProviderAccessError,
     ensure_request_deadline,
     request_deadline,
 )
@@ -22,13 +28,20 @@ class DocumentTooLargeError(ValueError):
     pass
 
 
+class ProviderRequestError(Exception):
+    """A provider needs attention before the user can retry."""
+
+
 class _DeadlineAwareLLM:
     def __init__(self, llm: LLMService) -> None:
         self._llm = llm
 
     def invoke(self, prompt: str) -> str:
         ensure_request_deadline()
-        answer = self._llm.invoke(prompt)
+        try:
+            answer = self._llm.invoke(prompt)
+        except ProviderAccessError as error:
+            raise ProviderRequestError(str(error)) from error
         ensure_request_deadline()
         return answer
 
@@ -80,18 +93,42 @@ class DocAgentApp:
     def delete_document(self, source: str) -> int:
         return self._services.store.delete(source)
 
-    def chat(self, thread_id: str, message: str) -> dict:
+    def list_providers(self) -> list[dict[str, str]]:
+        return available_chat_providers(self._settings)
+
+    def chat(
+        self, thread_id: str, message: str, provider: str | None = None, model: str | None = None
+    ) -> dict:
         if not thread_id.strip():
             raise ValueError("thread_id must not be empty")
         if not message.strip():
             raise ValueError("message must not be empty")
-        config = {"configurable": {"thread_id": thread_id}}
+        selected = select_chat_settings(self._settings, provider, model)
+        model_name = (
+            selected.anthropic_model if selected.llm_provider == "anthropic" else selected.llm_model
+        )
+        llm = self._services.llm if selected == self._settings else _make_llm(selected)
+        graph = (
+            self._graph
+            if selected == self._settings
+            else build_graph(
+                Services(llm=_DeadlineAwareLLM(llm), store=self._services.store),
+                selected,
+                checkpointer=self._graph.checkpointer,
+            )
+        )
+        config = {
+            "configurable": {"thread_id": thread_id},
+            "metadata": {"provider": selected.llm_provider, "model": model_name},
+        }
         with request_deadline(self._settings.chat_timeout_s, self._settings.summarize_timeout_s):
-            result = self._graph.invoke({"messages": [("user", message)]}, config)
+            result = graph.invoke({"messages": [("user", message)]}, config)
         return {
             "intent": result["intent"],
             "answer": result["answer"],
             "sources": result.get("sources") or [],
+            "provider": selected.llm_provider,
+            "model": model_name,
         }
 
     def list_threads(self) -> list[dict[str, str | None]]:
@@ -121,6 +158,8 @@ class DocAgentApp:
                 if isinstance(message, (HumanMessage, AIMessage))
                 and isinstance(message.content, str)
                 else str(message.content),
+                "provider": message.additional_kwargs.get("provider"),
+                "model": message.additional_kwargs.get("model"),
             }
             for message in messages
             if isinstance(message, (HumanMessage, AIMessage))
