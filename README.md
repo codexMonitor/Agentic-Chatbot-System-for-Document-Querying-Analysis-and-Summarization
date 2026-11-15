@@ -36,8 +36,10 @@ On bash: `python3 -m venv .venv && source .venv/bin/activate`.
 The chat LLM, the embedding model and the vector store are three independent settings. Vectors are
 stored under `DOC_AGENT_PERSIST_DIR` together with the name of the embedding model that produced them.
 **Changing the embedding provider or model requires re-ingesting**: the app refuses to start with an
-incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. Free-tier
-Gemini data may be used by Google for training, so use only public or sample documents.
+incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. This
+project can be used with internal documents. The Gemini free tier may use prompts and document
+content for training; use a paid or explicitly non-training provider for sensitive files, and review
+the provider's data-handling policy.
 
 ### Supabase pgvector (optional)
 
@@ -67,7 +69,7 @@ pip install -e ".[ui]"
 ```
 
 The UI shows conversation history backed by the API checkpointer. Documents and questions are sent
-to the configured LLM provider; review its data-handling policy before uploading sensitive material.
+to the configured LLM provider; the provider's data-handling policy applies.
 The HTTP client timeout defaults to 660 seconds and must be longer than
 `DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it with `DOC_AGENT_UI_TIMEOUT_S` if
 you change the server's summarize budget.
