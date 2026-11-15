@@ -70,11 +70,19 @@ pip install -e ".[ui]"
 
 The UI shows conversation history backed by the API checkpointer. Documents and questions are sent
 to the configured LLM provider; the provider's data-handling policy applies.
-The HTTP client timeout defaults to 660 seconds and must be longer than
-`DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it with `DOC_AGENT_UI_TIMEOUT_S` if
-you change the server's summarize budget.
 
-**API mode (two terminals).** In the first terminal, start FastAPI:
+**Embedded mode (default, one command, no separate API server).** Set the desired provider and
+persistence settings in `.env`, then run:
+
+```powershell
+.venv\Scripts\Activate.ps1
+streamlit run src\doc_agent\ui\app.py
+```
+
+The embedded UI calls `DocAgentApp` in-process and uses the same document, chat, and conversation
+history interface as HTTP mode.
+
+**API mode (two terminals).** Set `DOC_AGENT_MODE=http`. In the first terminal, start FastAPI:
 
 ```powershell
 .venv\Scripts\Activate.ps1
@@ -90,17 +98,9 @@ $env:DOC_AGENT_API_URL = "http://127.0.0.1:8000"
 streamlit run src\doc_agent\ui\app.py
 ```
 
-**Embedded mode (one command, no separate API server).** Set the desired provider and persistence
-settings in `.env`, then run:
-
-```powershell
-.venv\Scripts\Activate.ps1
-$env:DOC_AGENT_MODE = "embedded"; streamlit run src\doc_agent\ui\app.py
-```
-
-The embedded UI calls `DocAgentApp` in-process and uses the same document, chat, and conversation
-history interface as HTTP mode. Set `DOC_AGENT_MODE=embedded` in `.env` to start it with only
-`streamlit run src\doc_agent\ui\app.py`.
+The HTTP client timeout defaults to 660 seconds and must be longer than
+`DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it with `DOC_AGENT_UI_TIMEOUT_S` if
+you change the server's summarize budget.
 
 ### Chat model selection
 

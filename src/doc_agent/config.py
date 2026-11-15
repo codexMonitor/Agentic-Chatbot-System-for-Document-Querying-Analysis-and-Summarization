@@ -35,7 +35,7 @@ class Settings:
     summarize_group_size: int = 8
     # Recent messages shown to the follow-up rewrite step; 0 turns rewriting off.
     rewrite_history_turns: int = 4
-    ui_mode: str = "http"
+    ui_mode: str = "embedded"
     api_url: str = "http://127.0.0.1:8000"
     ui_timeout_s: float = 660.0
 

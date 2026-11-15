@@ -55,7 +55,7 @@ def test_defaults():
     assert settings.summarize_workers == 2
     assert settings.summarize_group_size == 8
     assert settings.rewrite_history_turns == 4
-    assert settings.ui_mode == "http"
+    assert settings.ui_mode == "embedded"
     assert settings.api_url == "http://127.0.0.1:8000"
     assert settings.ui_timeout_s == 660.0
 

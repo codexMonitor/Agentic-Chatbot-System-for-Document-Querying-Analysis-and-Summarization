@@ -146,9 +146,8 @@ def test_http_client_encodes_document_names_and_maps_timeout():
         client.list_documents()
 
 
-def test_create_embedded_client_uses_fake_services(tmp_path):
+def test_create_client_defaults_to_embedded_with_fake_services(tmp_path):
     settings = Settings(
-        ui_mode="embedded",
         checkpoint_db=str(tmp_path / "checkpoints.sqlite"),
     )
 
@@ -158,6 +157,13 @@ def test_create_embedded_client_uses_fake_services(tmp_path):
     assert isinstance(client._app, DocAgentApp)
     assert client.list_documents() == []
     client._app.close()
+
+
+def test_create_client_keeps_http_mode_available():
+    client = create_client(Settings(ui_mode="http"))
+
+    assert isinstance(client, HTTPClient)
+    client._client.close()
 
 
 def test_ui_timeout_must_exceed_summarize_budget():
