@@ -17,5 +17,6 @@
 | [0012](0012-evaluation-method.md) | Evaluation method | Accepted |
 | [0013](0013-supabase-pgvector.md) | Supabase pgvector | Accepted |
 | [0014](0014-chat-model-selection.md) | Per-request chat model selection | Accepted |
+| [0015](0015-excel-csv-ingestion.md) | Read Excel and CSV tables as cited text chunks | Accepted |
 
 Open decisions are listed in [proposed.md](proposed.md).

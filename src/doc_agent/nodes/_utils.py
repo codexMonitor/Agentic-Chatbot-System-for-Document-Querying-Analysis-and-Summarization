@@ -98,7 +98,15 @@ def format_context(chunks: list[Chunk]) -> str:
 
 def source_refs(chunks: list[Chunk]) -> list[dict]:
     """Numbering matches `format_context`, so `[n]` in an answer maps to `sources[n - 1]`."""
-    return [
-        {"n": i, "source": chunk.source, "position": chunk.position}
-        for i, chunk in enumerate(chunks, start=1)
-    ]
+    refs = []
+    for i, chunk in enumerate(chunks, start=1):
+        citation = next(
+            (
+                line[len("Citation: ") :]
+                for line in chunk.text.splitlines()
+                if line.startswith("Citation: ")
+            ),
+            chunk.source,
+        )
+        refs.append({"n": i, "source": citation, "position": chunk.position})
+    return refs

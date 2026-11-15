@@ -4,6 +4,10 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+DEFAULT_MAX_UPLOAD_MB = 20
+DEFAULT_MAX_TABLE_ROWS = 20_000
+DEFAULT_MAX_TABLE_CELLS = 200_000
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -14,7 +18,10 @@ class Settings:
     embedding_model: str = ""
     vector_store: str = "memory"
     persist_dir: str = ".doc_agent_data"
-    max_upload_mb: int = 20
+    max_upload_mb: int = DEFAULT_MAX_UPLOAD_MB
+    max_table_rows: int = DEFAULT_MAX_TABLE_ROWS
+    max_table_cells: int = DEFAULT_MAX_TABLE_CELLS
+    include_hidden_sheets: bool = False
     # Empty means `<persist_dir>/checkpoints.sqlite`.
     checkpoint_db: str = ""
     chunk_size: int = 500
@@ -28,7 +35,7 @@ class Settings:
     summarize_group_size: int = 8
     # Recent messages shown to the follow-up rewrite step; 0 turns rewriting off.
     rewrite_history_turns: int = 4
-    ui_mode: str = "http"
+    ui_mode: str = "embedded"
     api_url: str = "http://127.0.0.1:8000"
     ui_timeout_s: float = 660.0
 
@@ -48,6 +55,9 @@ def load_settings() -> Settings:
         env.get("DOC_AGENT_SUMMARIZE_TIMEOUT_S", defaults.summarize_timeout_s)
     )
     ui_timeout_s = float(env.get("DOC_AGENT_UI_TIMEOUT_S", max(660.0, summarize_timeout_s + 60.0)))
+    include_hidden_sheets = env.get("DOC_AGENT_INCLUDE_HIDDEN_SHEETS", "false").strip().lower()
+    if include_hidden_sheets not in {"true", "false", "1", "0", "yes", "no", "on", "off"}:
+        raise ValueError("DOC_AGENT_INCLUDE_HIDDEN_SHEETS must be a boolean")
     return Settings(
         llm_provider=env.get("DOC_AGENT_LLM_PROVIDER", defaults.llm_provider),
         llm_model=env.get("DOC_AGENT_LLM_MODEL", defaults.llm_model),
@@ -57,6 +67,9 @@ def load_settings() -> Settings:
         vector_store=env.get("DOC_AGENT_VECTOR_STORE", defaults.vector_store),
         persist_dir=env.get("DOC_AGENT_PERSIST_DIR", defaults.persist_dir),
         max_upload_mb=int(env.get("DOC_AGENT_MAX_UPLOAD_MB", defaults.max_upload_mb)),
+        max_table_rows=int(env.get("DOC_AGENT_MAX_TABLE_ROWS", defaults.max_table_rows)),
+        max_table_cells=int(env.get("DOC_AGENT_MAX_TABLE_CELLS", defaults.max_table_cells)),
+        include_hidden_sheets=include_hidden_sheets in {"true", "1", "yes", "on"},
         checkpoint_db=env.get("DOC_AGENT_CHECKPOINT_DB", defaults.checkpoint_db),
         chunk_size=int(env.get("DOC_AGENT_CHUNK_SIZE", defaults.chunk_size)),
         chunk_overlap=int(env.get("DOC_AGENT_CHUNK_OVERLAP", defaults.chunk_overlap)),

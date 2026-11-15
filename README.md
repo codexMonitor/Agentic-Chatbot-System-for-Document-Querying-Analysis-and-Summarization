@@ -2,9 +2,9 @@
 My capstone project.
 
 The Python package is `doc_agent` (distribution `doc-agent`). It is a LangGraph chatbot that routes each
-question to a short chat, document question-answering, analysis, or summarization. By default it runs fully offline
-with a fake LLM, a fake embedder and an in-memory vector store; with a Gemini key it ingests PDF, DOCX,
-TXT and MD files and answers with source citations.
+question to a short chat, document question-answering, analysis, or summarization. by default it runs fully offline
+with a fake LLM, a fake embedder and an in-memory vector store; with a configured provider it ingests
+PDF, DOCX, TXT, MD, XLSX and CSV files and answers with source citations.
 
 ## Setup (Windows PowerShell)
 
@@ -36,8 +36,10 @@ On bash: `python3 -m venv .venv && source .venv/bin/activate`.
 The chat LLM, the embedding model and the vector store are three independent settings. Vectors are
 stored under `DOC_AGENT_PERSIST_DIR` together with the name of the embedding model that produced them.
 **Changing the embedding provider or model requires re-ingesting**: the app refuses to start with an
-incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. Free-tier
-Gemini data may be used by Google for training, so use only public or sample documents.
+incompatible store; delete the persistence directory (`.doc_agent_data`) and ingest again. This
+project can be used with internal documents. The Gemini free tier may use prompts and document
+content for training; use a paid or explicitly non-training provider for sensitive files, and review
+the provider's data-handling policy.
 
 ### Supabase pgvector (optional)
 
@@ -67,12 +69,20 @@ pip install -e ".[ui]"
 ```
 
 The UI shows conversation history backed by the API checkpointer. Documents and questions are sent
-to the configured LLM provider; review its data-handling policy before uploading sensitive material.
-The HTTP client timeout defaults to 660 seconds and must be longer than
-`DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it with `DOC_AGENT_UI_TIMEOUT_S` if
-you change the server's summarize budget.
+to the configured LLM provider; the provider's data-handling policy applies.
 
-**API mode (two terminals).** In the first terminal, start FastAPI:
+**Embedded mode (default, one command, no separate API server).** Set the desired provider and
+persistence settings in `.env`, then run:
+
+```powershell
+.venv\Scripts\Activate.ps1
+streamlit run src\doc_agent\ui\app.py
+```
+
+The embedded UI calls `DocAgentApp` in-process and uses the same document, chat, and conversation
+history interface as HTTP mode.
+
+**API mode (two terminals).** Set `DOC_AGENT_MODE=http`. In the first terminal, start FastAPI:
 
 ```powershell
 .venv\Scripts\Activate.ps1
@@ -88,17 +98,9 @@ $env:DOC_AGENT_API_URL = "http://127.0.0.1:8000"
 streamlit run src\doc_agent\ui\app.py
 ```
 
-**Embedded mode (one command, no separate API server).** Set the desired provider and persistence
-settings in `.env`, then run:
-
-```powershell
-.venv\Scripts\Activate.ps1
-$env:DOC_AGENT_MODE = "embedded"; streamlit run src\doc_agent\ui\app.py
-```
-
-The embedded UI calls `DocAgentApp` in-process and uses the same document, chat, and conversation
-history interface as HTTP mode. Set `DOC_AGENT_MODE=embedded` in `.env` to start it with only
-`streamlit run src\doc_agent\ui\app.py`.
+The HTTP client timeout defaults to 660 seconds and must be longer than
+`DOC_AGENT_SUMMARIZE_TIMEOUT_S` (default 600 seconds). Override it with `DOC_AGENT_UI_TIMEOUT_S` if
+you change the server's summarize budget.
 
 ### Chat model selection
 
@@ -176,9 +178,30 @@ python -m doc_agent data\sample.txt     # or: doc-agent data\sample.txt
 ```
 
 Ask questions at the `you>` prompt (`What is Scrum?`, `Summarize the document`,
-`Compare LangGraph and Scrum`); type `quit` to exit. Supported files: `.txt`, `.md`, `.pdf`, `.docx`
-(scanned PDFs need OCR and are not supported). Question-answering replies print a `Sources:` block with
-one `[n] file#position` line per chunk given to the model; `[n]` matches the citations in the answer.
+`Compare LangGraph and Scrum`); type `quit` to exit. Supported files: `.txt`, `.md`, `.pdf`, `.docx`,
+`.xlsx` and `.csv` (scanned PDFs need OCR and are not supported). Question-answering replies print a
+`Sources:` block; Excel and CSV citations include the worksheet (when applicable) and source row range.
+The `[n]` labels match the citations in the answer.
+
+### Excel and CSV ingestion
+
+`.xlsx` worksheets and `.csv` files are converted to Markdown-style tables. Every table chunk repeats
+its sheet name (for workbooks), header row and citation row range. Hidden and very-hidden worksheets
+are skipped by default; set `DOC_AGENT_INCLUDE_HIDDEN_SHEETS=true` to include them. Legacy `.xls`
+files and macro-enabled Excel files are rejected; save a macro-free `.xlsx` copy instead. Excel
+formulas use cached values from the last time the workbook was calculated. A warning identifies
+formulas without cached values; those cells remain blank rather than being recalculated or guessed.
+
+Uploads are limited by `DOC_AGENT_MAX_UPLOAD_MB` (default 20 MB). Table files are limited to
+`DOC_AGENT_MAX_TABLE_ROWS` (default 20,000) and `DOC_AGENT_MAX_TABLE_CELLS` (default 200,000) per
+file. The cell limit counts each worksheet's used-range rectangle (including blank cells between
+values) and the parsed CSV row widths, so it bounds both parsing and memory use. Increase these
+settings only when the machine can safely process larger workbooks.
+
+**Table analysis limitation:** the LLM reads table chunks as text. Arithmetic over many rows (such as
+totals, averages or growth rates) can be wrong, and retrieval may omit rows needed to answer a
+question. Exact calculations with a data tool (for example, pandas over the loaded table) are a
+possible extension and are not implemented here.
 
 Options:
 

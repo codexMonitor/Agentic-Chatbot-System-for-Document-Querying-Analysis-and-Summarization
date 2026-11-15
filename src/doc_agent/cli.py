@@ -58,7 +58,16 @@ def _run(args: argparse.Namespace) -> int:
         return 1
     for path in args.files:
         try:
-            count = ingest_file(path, services.store, settings.chunk_size, settings.chunk_overlap)
+            count = ingest_file(
+                path,
+                services.store,
+                settings.chunk_size,
+                settings.chunk_overlap,
+                max_upload_mb=settings.max_upload_mb,
+                max_table_rows=settings.max_table_rows,
+                max_table_cells=settings.max_table_cells,
+                include_hidden_sheets=settings.include_hidden_sheets,
+            )
         except (OSError, ValueError, LLMError) as error:
             print(f"! skipped {path}: {error}")
             continue

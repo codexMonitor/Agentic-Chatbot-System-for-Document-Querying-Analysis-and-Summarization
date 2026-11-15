@@ -4,6 +4,7 @@ from pathlib import Path
 import pytest
 
 from doc_agent.eval.runner import _read_dataset
+from doc_agent.services.ingestion import load_file_chunks
 
 VALID_INTENTS = {"qa", "analysis", "summarize"}
 REQUIRED_FIELDS = {
@@ -37,6 +38,20 @@ def test_evaluation_dataset_rows_match_the_schema():
         if "key_facts" in row:
             assert isinstance(row["key_facts"], list)
             assert all(isinstance(fact, str) and fact.strip() for fact in row["key_facts"])
+
+
+def test_excel_evaluation_dataset_has_three_reviewable_questions():
+    eval_dir = Path(__file__).parents[1] / "eval"
+    dataset_path = eval_dir / "dataset_excel.jsonl"
+    rows = _read_dataset(dataset_path)
+    sample_workbook = eval_dir / "docs" / "sample_financial_report.xlsx"
+    workbook_text = "\n".join(load_file_chunks(sample_workbook, 500, 50))
+
+    assert len(rows) == 3
+    assert all(row["source_docs"] == ["sample_financial_report.xlsx"] for row in rows)
+    assert all(row["key_facts"] for row in rows)
+    assert "120,000" in workbook_text
+    assert "22,500" in workbook_text
 
 
 def test_dataset_validator_accepts_optional_key_facts(tmp_path):

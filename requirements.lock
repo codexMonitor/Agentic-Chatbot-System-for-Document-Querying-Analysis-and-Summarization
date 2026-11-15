@@ -25,6 +25,7 @@ distro==1.9.0
 docstring_parser==0.18.0
 doc-agent @ file:///D:/GitHub/Agentic-Chatbot-System-for-Document-Querying-Analysis-and-Summarization
 durationpy==0.11
+et_xmlfile==2.0.0
 fastapi==0.162.5
 filelock==4.2.10
 flatbuffers==25.12.19
@@ -73,6 +74,7 @@ nodeenv==1.12.0
 numpy==2.5.4
 oauthlib==4.0.1
 onnxruntime==1.31.1
+openpyxl==3.1.5
 opentelemetry-api==1.45.2
 opentelemetry-exporter-otlp-common==0.66b2
 opentelemetry-exporter-otlp-proto-common==1.45.2

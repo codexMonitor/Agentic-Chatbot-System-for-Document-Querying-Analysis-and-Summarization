@@ -14,6 +14,9 @@ ENV_VARS = [
     "DOC_AGENT_CHUNK_OVERLAP",
     "DOC_AGENT_RETRIEVAL_K",
     "DOC_AGENT_MAX_UPLOAD_MB",
+    "DOC_AGENT_MAX_TABLE_ROWS",
+    "DOC_AGENT_MAX_TABLE_CELLS",
+    "DOC_AGENT_INCLUDE_HIDDEN_SHEETS",
     "DOC_AGENT_CHAT_TIMEOUT_S",
     "DOC_AGENT_SUMMARIZE_TIMEOUT_S",
     "DOC_AGENT_LLM_TIMEOUT_S",
@@ -42,6 +45,9 @@ def test_defaults():
     assert settings == Settings()
     assert settings.persist_dir == ".doc_agent_data"
     assert settings.max_upload_mb == 20
+    assert settings.max_table_rows == 20_000
+    assert settings.max_table_cells == 200_000
+    assert not settings.include_hidden_sheets
     assert settings.chat_timeout_s == 120.0
     assert settings.summarize_timeout_s == 600.0
     assert settings.llm_timeout_s == 60.0
@@ -49,7 +55,7 @@ def test_defaults():
     assert settings.summarize_workers == 2
     assert settings.summarize_group_size == 8
     assert settings.rewrite_history_turns == 4
-    assert settings.ui_mode == "http"
+    assert settings.ui_mode == "embedded"
     assert settings.api_url == "http://127.0.0.1:8000"
     assert settings.ui_timeout_s == 660.0
 
@@ -62,6 +68,9 @@ def test_env_overrides_defaults(monkeypatch):
     monkeypatch.setenv("DOC_AGENT_EMBEDDING_MODEL", "some-embedding")
     monkeypatch.setenv("DOC_AGENT_PERSIST_DIR", "store")
     monkeypatch.setenv("DOC_AGENT_MAX_UPLOAD_MB", "7")
+    monkeypatch.setenv("DOC_AGENT_MAX_TABLE_ROWS", "900")
+    monkeypatch.setenv("DOC_AGENT_MAX_TABLE_CELLS", "12000")
+    monkeypatch.setenv("DOC_AGENT_INCLUDE_HIDDEN_SHEETS", "yes")
     monkeypatch.setenv("DOC_AGENT_CHAT_TIMEOUT_S", "12.5")
     monkeypatch.setenv("DOC_AGENT_SUMMARIZE_TIMEOUT_S", "45")
     monkeypatch.setenv("DOC_AGENT_LLM_TIMEOUT_S", "12.5")
@@ -80,6 +89,9 @@ def test_env_overrides_defaults(monkeypatch):
     assert settings.embedding_model == "some-embedding"
     assert settings.persist_dir == "store"
     assert settings.max_upload_mb == 7
+    assert settings.max_table_rows == 900
+    assert settings.max_table_cells == 12000
+    assert settings.include_hidden_sheets
     assert settings.chat_timeout_s == 12.5
     assert settings.summarize_timeout_s == 45.0
     assert settings.llm_timeout_s == 12.5
@@ -100,6 +112,13 @@ def test_ui_timeout_default_exceeds_custom_summarize_timeout(monkeypatch):
 def test_dotenv_file_is_picked_up(tmp_path):
     (tmp_path / ".env").write_text("DOC_AGENT_LLM_MODEL=from-dotenv\n", encoding="utf-8")
     assert load_settings().llm_model == "from-dotenv"
+
+
+def test_hidden_sheet_setting_rejects_invalid_boolean(monkeypatch):
+    monkeypatch.setenv("DOC_AGENT_INCLUDE_HIDDEN_SHEETS", "sometimes")
+
+    with pytest.raises(ValueError, match="must be a boolean"):
+        load_settings()
 
 
 def test_real_environment_wins_over_dotenv(tmp_path, monkeypatch):

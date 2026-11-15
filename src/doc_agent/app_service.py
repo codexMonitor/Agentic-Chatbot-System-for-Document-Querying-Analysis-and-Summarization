@@ -17,7 +17,7 @@ from doc_agent.services.errors import (
     ensure_request_deadline,
     request_deadline,
 )
-from doc_agent.services.ingestion import LOADERS, ingest_file
+from doc_agent.services.ingestion import LOADERS, ingest_file, unsupported_type_message
 
 
 class UnsupportedDocumentTypeError(ValueError):
@@ -68,15 +68,14 @@ class DocAgentApp:
             raise ValueError("a filename is required")
         suffix = Path(source).suffix.lower()
         if suffix not in LOADERS:
-            supported = ", ".join(sorted(LOADERS))
-            raise UnsupportedDocumentTypeError(f"unsupported file type (supported: {supported})")
+            raise UnsupportedDocumentTypeError(unsupported_type_message(suffix))
         if len(content) > self.max_upload_bytes:
             raise DocumentTooLargeError(
                 f"file exceeds the {self._settings.max_upload_mb} MB upload limit"
             )
 
         with TemporaryDirectory() as directory:
-            path = Path(directory) / f"upload{suffix}"
+            path = Path(directory) / source
             path.write_bytes(content)
             chunks = ingest_file(
                 path,
@@ -84,6 +83,10 @@ class DocAgentApp:
                 self._settings.chunk_size,
                 self._settings.chunk_overlap,
                 source=source,
+                max_upload_mb=self._settings.max_upload_mb,
+                max_table_rows=self._settings.max_table_rows,
+                max_table_cells=self._settings.max_table_cells,
+                include_hidden_sheets=self._settings.include_hidden_sheets,
             )
         return {"source": source, "chunks": chunks}
 
