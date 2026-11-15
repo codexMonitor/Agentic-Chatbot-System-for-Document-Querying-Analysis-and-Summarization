@@ -1,0 +1,3 @@
+{"id":"excel-01","question":"What was North's Q3 revenue?","reference_answer":"North reported USD 120,000 in Q3 revenue.","source_docs":["sample_financial_report.xlsx"],"expected_intent":"qa","key_facts":["North","120,000"]}
+{"id":"excel-02","question":"Which region had the highest Q3 revenue?","reference_answer":"North had the highest Q3 revenue at USD 120,000.","source_docs":["sample_financial_report.xlsx"],"expected_intent":"qa","key_facts":["North","120,000"]}
+{"id":"excel-03","question":"What was South's reported Q3 profit?","reference_answer":"South reported USD 22,500 in Q3 profit.","source_docs":["sample_financial_report.xlsx"],"expected_intent":"qa","key_facts":["South","22,500"]}

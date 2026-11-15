@@ -12,5 +12,9 @@ The `source_docs` entries use the PDF basename expected from ingestion. Place
 PDF to `--docs`. Questions marked with `expected_intent: "summarize"` remain in the dataset but
 are skipped by default because summarization can be expensive.
 
+`dataset_excel.jsonl` is a separate three-question review set built from the generated
+`docs\sample_financial_report.xlsx` workbook. It is intentionally not merged into the PDF dataset.
+Verify its reference answers against that sample workbook before using it for evaluation.
+
 Install the optional judge dependency with `pip install -e ".[eval]"`. `--judge` uses the Ragas
 collections API and a configured real Gemini model; otherwise the judged metrics remain `null`.

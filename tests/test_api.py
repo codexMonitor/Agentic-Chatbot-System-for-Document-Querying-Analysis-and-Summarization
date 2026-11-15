@@ -1,5 +1,8 @@
+from io import BytesIO
+
 import pytest
 from fastapi.testclient import TestClient
+from openpyxl import Workbook
 
 from doc_agent.api.main import create_app
 from doc_agent.config import Settings
@@ -56,6 +59,48 @@ def test_upload_rejects_unsupported_type(tmp_path):
             "/documents", files={"file": ("payload.exe", b"no", "application/octet-stream")}
         )
     assert response.status_code == 415
+
+
+@pytest.mark.parametrize(
+    ("filename", "detail"),
+    [
+        ("legacy.xls", "legacy Excel .xls files are not supported"),
+        ("macro.xlsm", "macro-enabled Excel files are not supported"),
+    ],
+)
+def test_upload_rejects_legacy_and_macro_excel(tmp_path, filename, detail):
+    with _client(tmp_path) as client:
+        response = client.post(
+            "/documents", files={"file": (filename, b"not opened", "application/octet-stream")}
+        )
+
+    assert response.status_code == 415
+    assert detail in response.json()["detail"]
+
+
+def test_xlsx_upload_and_chat_citation_include_sheet_rows(tmp_path):
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Q3"
+    sheet.append(["Region", "Revenue"])
+    sheet.append(["North", 1200])
+    content = BytesIO()
+    workbook.save(content)
+
+    with _client(tmp_path) as client:
+        uploaded = client.post(
+            "/documents",
+            files={"file": ("report.xlsx", content.getvalue(), "application/octet-stream")},
+        )
+        answer = client.post(
+            "/chat",
+            json={"thread_id": "excel-thread", "message": "What is the revenue for North?"},
+        )
+
+    assert uploaded.status_code == 200
+    assert uploaded.json() == {"source": "report.xlsx", "chunks": 1}
+    assert answer.status_code == 200
+    assert answer.json()["sources"][0]["source"] == 'report.xlsx, Sheet "Q3", rows 2-2'
 
 
 def test_upload_rejects_oversized_content(tmp_path):

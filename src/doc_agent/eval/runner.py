@@ -16,7 +16,7 @@ from doc_agent.eval.metrics import calculate_key_fact_metrics, calculate_metrics
 from doc_agent.graph import build_graph, memory_checkpointer
 from doc_agent.services import Services, build_services
 from doc_agent.services.base import LLMService
-from doc_agent.services.ingestion import LOADERS, load_text, split_text
+from doc_agent.services.ingestion import LOADERS, load_file_chunks
 
 _REQUIRED_FIELDS = {
     "id",
@@ -109,7 +109,7 @@ def _read_dataset(path: Path) -> list[dict[str, Any]]:
 
 
 def _prepare_documents(
-    docs_dir: Path, chunk_size: int, chunk_overlap: int
+    docs_dir: Path, settings: Settings
 ) -> list[_PreparedDocument]:
     if not docs_dir.is_dir():
         raise ValueError(f"documents directory does not exist: {docs_dir}")
@@ -120,7 +120,18 @@ def _prepare_documents(
     if not paths:
         raise ValueError(f"no supported documents found in {docs_dir}")
     return [
-        _PreparedDocument(path, split_text(load_text(path), chunk_size, chunk_overlap))
+        _PreparedDocument(
+            path,
+            load_file_chunks(
+                path,
+                settings.chunk_size,
+                settings.chunk_overlap,
+                max_upload_mb=settings.max_upload_mb,
+                max_table_rows=settings.max_table_rows,
+                max_table_cells=settings.max_table_cells,
+                include_hidden_sheets=settings.include_hidden_sheets,
+            ),
+        )
         for path in paths
     ]
 
@@ -212,7 +223,7 @@ def run_evaluation(
         row for row in rows if not include_summarize and row["expected_intent"] == "summarize"
     ]
     run_rows = [row for row in rows if include_summarize or row["expected_intent"] != "summarize"]
-    documents = _prepare_documents(docs_dir, settings.chunk_size, settings.chunk_overlap)
+    documents = _prepare_documents(docs_dir, settings)
     n_chunks = sum(len(document.chunks) for document in documents)
     expected_calls = _expected_llm_calls(run_rows, n_chunks, settings.summarize_group_size)
     print_fn(

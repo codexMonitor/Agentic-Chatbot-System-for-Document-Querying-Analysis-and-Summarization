@@ -1,6 +1,7 @@
 import pytest
 
-from doc_agent.nodes._utils import check_citations
+from doc_agent.nodes._utils import check_citations, source_refs
+from doc_agent.services.base import Chunk
 
 
 def test_check_citations_returns_empty_when_there_are_no_citations():
@@ -22,3 +23,15 @@ def test_check_citations_preserves_repeated_invalid_citations():
 def test_check_citations_rejects_negative_source_count():
     with pytest.raises(ValueError, match="must not be negative"):
         check_citations("No citations.", n_sources=-1)
+
+
+def test_table_source_reference_includes_sheet_and_row_range():
+    chunk = Chunk(
+        'Citation: report.xlsx, Sheet "Q3", rows 12-40\nSheet: "Q3"\n| Revenue |',
+        "report.xlsx",
+        3,
+    )
+
+    assert source_refs([chunk]) == [
+        {"n": 1, "source": 'report.xlsx, Sheet "Q3", rows 12-40', "position": 3}
+    ]

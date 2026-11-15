@@ -2,9 +2,9 @@
 My capstone project.
 
 The Python package is `doc_agent` (distribution `doc-agent`). It is a LangGraph chatbot that routes each
-question to a short chat, document question-answering, analysis, or summarization. By default it runs fully offline
-with a fake LLM, a fake embedder and an in-memory vector store; with a Gemini key it ingests PDF, DOCX,
-TXT and MD files and answers with source citations.
+question to a short chat, document question-answering, analysis, or summarization. by default it runs fully offline
+with a fake LLM, a fake embedder and an in-memory vector store; with a configured provider it ingests
+PDF, DOCX, TXT, MD, XLSX and CSV files and answers with source citations.
 
 ## Setup (Windows PowerShell)
 
@@ -176,9 +176,30 @@ python -m doc_agent data\sample.txt     # or: doc-agent data\sample.txt
 ```
 
 Ask questions at the `you>` prompt (`What is Scrum?`, `Summarize the document`,
-`Compare LangGraph and Scrum`); type `quit` to exit. Supported files: `.txt`, `.md`, `.pdf`, `.docx`
-(scanned PDFs need OCR and are not supported). Question-answering replies print a `Sources:` block with
-one `[n] file#position` line per chunk given to the model; `[n]` matches the citations in the answer.
+`Compare LangGraph and Scrum`); type `quit` to exit. Supported files: `.txt`, `.md`, `.pdf`, `.docx`,
+`.xlsx` and `.csv` (scanned PDFs need OCR and are not supported). Question-answering replies print a
+`Sources:` block; Excel and CSV citations include the worksheet (when applicable) and source row range.
+The `[n]` labels match the citations in the answer.
+
+### Excel and CSV ingestion
+
+`.xlsx` worksheets and `.csv` files are converted to Markdown-style tables. Every table chunk repeats
+its sheet name (for workbooks), header row and citation row range. Hidden and very-hidden worksheets
+are skipped by default; set `DOC_AGENT_INCLUDE_HIDDEN_SHEETS=true` to include them. Legacy `.xls`
+files and macro-enabled Excel files are rejected; save a macro-free `.xlsx` copy instead. Excel
+formulas use cached values from the last time the workbook was calculated. A warning identifies
+formulas without cached values; those cells remain blank rather than being recalculated or guessed.
+
+Uploads are limited by `DOC_AGENT_MAX_UPLOAD_MB` (default 20 MB). Table files are limited to
+`DOC_AGENT_MAX_TABLE_ROWS` (default 20,000) and `DOC_AGENT_MAX_TABLE_CELLS` (default 200,000) per
+file. The cell limit counts each worksheet's used-range rectangle (including blank cells between
+values) and the parsed CSV row widths, so it bounds both parsing and memory use. Increase these
+settings only when the machine can safely process larger workbooks.
+
+**Table analysis limitation:** the LLM reads table chunks as text. Arithmetic over many rows (such as
+totals, averages or growth rates) can be wrong, and retrieval may omit rows needed to answer a
+question. Exact calculations with a data tool (for example, pandas over the loaded table) are a
+possible extension and are not implemented here.
 
 Options:
 
