@@ -233,8 +233,18 @@ def main(client: Client | None = None) -> None:
     if client is None and "_doc_agent_client" not in st.session_state:
         try:
             st.session_state["_doc_agent_client"] = create_client()
-        except (LLMError, UIClientError, ValueError) as error:
-            st.error(f"Could not start the document assistant: {error}")
+        except UIClientError as error:
+            st.error(
+                f"Could not connect to the document service: {error} "
+                "Check that the API is running and DOC_AGENT_API_URL is correct, "
+                "or set DOC_AGENT_MODE=embedded."
+            )
+            st.stop()
+        except (LLMError, ValueError) as error:
+            st.error(
+                f"Could not start the document assistant: {error} "
+                "Check the provider and DOC_AGENT_* settings in .env."
+            )
             st.stop()
     if client is None:
         client = st.session_state["_doc_agent_client"]

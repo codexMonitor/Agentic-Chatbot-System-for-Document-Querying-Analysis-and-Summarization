@@ -1,11 +1,14 @@
 import json
+import sys
 from pathlib import Path
+from types import ModuleType
 
 import httpx
 import pytest
 
 from doc_agent.app_service import DocAgentApp
 from doc_agent.config import Settings
+from doc_agent.ui import app as ui_app
 from doc_agent.ui.app import HTTPClient, InProcessClient, UIClientError, create_client
 
 _APP_FILE = Path(__file__).parents[1] / "src" / "doc_agent" / "ui" / "app.py"
@@ -162,6 +165,33 @@ def test_ui_timeout_must_exceed_summarize_budget():
 
     with pytest.raises(ValueError, match="longer than DOC_AGENT_SUMMARIZE_TIMEOUT_S"):
         create_client(settings)
+
+
+def test_ui_startup_shows_actionable_message_for_client_error(monkeypatch):
+    class StopUI(Exception):
+        pass
+
+    errors = []
+    streamlit = ModuleType("streamlit")
+    streamlit.session_state = {}
+    streamlit.set_page_config = lambda **kwargs: None
+    streamlit.title = lambda title: None
+    streamlit.error = errors.append
+    streamlit.stop = lambda: (_ for _ in ()).throw(StopUI())
+
+    def fail_to_create_client():
+        raise UIClientError("The API refused the connection.")
+
+    monkeypatch.setitem(sys.modules, "streamlit", streamlit)
+    monkeypatch.setattr(ui_app, "create_client", fail_to_create_client)
+    with pytest.raises(StopUI):
+        ui_app.main()
+
+    assert len(errors) == 1
+    assert "Could not connect to the document service" in errors[0]
+    assert "The API refused the connection." in errors[0]
+    assert "Check that the API is running" in errors[0]
+    assert "DOC_AGENT_MODE=embedded" in errors[0]
 
 
 def test_embedded_ui_starts_with_fake_services(tmp_path, monkeypatch):
